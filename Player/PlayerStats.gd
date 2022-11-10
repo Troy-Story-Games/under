@@ -8,9 +8,16 @@ class_name PlayerStats
 signal player_died()
 signal player_health_changed(value)
 signal player_max_health_changed(value)
+signal player_dirt_changed(value)
 
+var dirt: int = 0 setget set_dirt
 var max_health : int = 1 setget set_max_health
 onready var health : int = max_health setget set_health
+
+
+func set_dirt(value: int):
+    dirt = value
+    emit_signal("player_dirt_changed", dirt)
 
 
 func set_health(value : int):

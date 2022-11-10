@@ -7,9 +7,10 @@ export(int) var ACCELERATION = 256
 export(int) var MAX_SPEED = 32
 export(float) var FRICTION = 0.5
 export(int) var GRAVITY = 200
-export(int) var JUMP_FORCE = 64
+export(int) var JUMP_FORCE = 85
 export(int) var WALL_SLIDE_SPEED = 24
 export(int) var MAX_WALL_SLIDE_SPEED = 64
+export(int) var CLOSE_CEILING_DISTANCE = 4
 
 enum {
     MOVE,
@@ -19,6 +20,7 @@ enum {
 
 var wall_collision: KinematicCollision2D = null
 var floor_collision: KinematicCollision2D = null
+var ceiling_collision: KinematicCollision2D = null
 var dig_block: Block = null
 var state = MOVE
 var motion = Vector2.ZERO
@@ -91,15 +93,16 @@ func apply_horizontal_force(input_vector, delta):
 
 
 func apply_friction(input_vector):
-    if input_vector.x == 0 and is_on_floor():
+    if input_vector.x == 0 and on_floor():
         motion.x = lerp(motion.x, 0, FRICTION)
 
 
 func jump_check():
-    if is_on_floor() or coyoteJumpTimer.time_left > 0:
-        if Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump"):
-            jump(JUMP_FORCE)
-            just_jumped = true
+    if on_floor() or coyoteJumpTimer.time_left > 0:
+        if not ceiling_close():
+            if Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump"):
+                jump(JUMP_FORCE)
+                just_jumped = true
     else:
         if (Input.is_action_just_released("ui_up") or Input.is_action_just_released("jump")) and motion.y < -JUMP_FORCE / 2:
             motion.y = -JUMP_FORCE / 2
@@ -127,7 +130,7 @@ func update_animations(input_vector):
         animationPlayer.play("Idle")
 
     # Override run/idle if we're in the air
-    if not is_on_floor():
+    if not on_floor():
         pass  # TODO: Play jump animation
 
 
@@ -139,28 +142,29 @@ func on_wall():
     return wall_collision != null
 
 
+func ceiling_close():
+    return ceiling_collision != null
+
+
 func move():
-    var was_in_air = not is_on_floor()
-    var was_on_floor = is_on_floor()
+    var was_in_air = not on_floor()
+    var was_on_floor = on_floor()
     var last_motion = motion
     var last_position = position
 
     motion = move_and_slide(motion, Vector2.UP)
 
-    if is_on_floor():
-        var test_floor: Vector2 = Vector2(0, last_motion.y)
-        floor_collision = move_and_collide(test_floor, true, true, true)
-    else:
-        floor_collision = null
+    var test_floor: Vector2 = Vector2(0, 1)
+    floor_collision = move_and_collide(test_floor, true, true, true)
 
-    if is_on_wall():
-        var test_wall: Vector2 = Vector2(last_motion.x, 0)
-        wall_collision = move_and_collide(test_wall, true, true, true)
-    else:
-        wall_collision = null
+    var test_wall: Vector2 = Vector2(sign(last_motion.x), 0)
+    wall_collision = move_and_collide(test_wall, true, true, true)
+
+    var test_ceiling: Vector2 = Vector2(0, CLOSE_CEILING_DISTANCE * -1)
+    ceiling_collision = move_and_collide(test_ceiling, true, true, true)
 
     # Happens on landing
-    if was_in_air and is_on_floor():
+    if was_in_air and on_floor():
         # Fix for move_and_slide_with_snap causing us to
         # lose momentum when landing on a slope
         motion.x = last_motion.x
@@ -169,16 +173,17 @@ func move():
         double_jump = true
 
     # Just left the ground
-    if was_on_floor and not is_on_floor() and not just_jumped:
+    if was_on_floor and not on_floor() and not just_jumped:
         # Fix for little hop if you fall off a ledge after
         # climbing a slope
+        print("coyote")
         motion.y = 0
         position.y = last_position.y
         coyoteJumpTimer.start()
 
 
 func wall_slide_check():
-    if not is_on_floor() and is_on_wall():
+    if not on_floor() and on_wall():
         state = WALL_SLIDE
         double_jump = true
 
@@ -212,12 +217,12 @@ func wall_detach(delta, wall_axis):
         motion.x = -ACCELERATION * delta
         state = MOVE
 
-    if wall_axis == 0 or is_on_floor():
+    if wall_axis == 0 or on_floor():
         state = MOVE
 
 
 func dig_check():
-    if (Input.is_action_pressed("ui_right") or Input.is_action_pressed("ui_left")) and wall_collision and is_on_floor():
+    if (Input.is_action_pressed("ui_right") or Input.is_action_pressed("ui_left")) and wall_collision and on_floor():
         var collider: Node = wall_collision.collider
         if collider is Block:
             dig_block = collider
@@ -239,3 +244,10 @@ func _on_Hurtbox_take_damage(damage : int, _area : Area2D):
     # TODO: Consider playing a sound effect
     playerStats.health -= damage
     # TODO: Consider playing a flash or damage animation
+
+
+func _on_ItemCollector_body_entered(body):
+    if body is CollectibleItem:
+        if body.IS_DIRT:
+            playerStats.dirt += 1
+    body.queue_free()

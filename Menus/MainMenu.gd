@@ -1,6 +1,12 @@
 extends CenterContainer
 class_name MainMenu
 
+onready var playButton = $"%Play"
+
+
+func _ready() -> void:
+    playButton.grab_focus()
+
 
 func _on_Play_pressed() -> void:
     # warning-ignore:return_value_discarded

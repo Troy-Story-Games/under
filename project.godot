@@ -14,6 +14,16 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://World/Block.gd"
 }, {
+"base": "RigidBody2D",
+"class": "BlockParticle",
+"language": "GDScript",
+"path": "res://Effects/BlockParticle.gd"
+}, {
+"base": "KinematicBody2D",
+"class": "CollectibleItem",
+"language": "GDScript",
+"path": "res://Pickup/CollectibleItem.gd"
+}, {
 "base": "KinematicBody2D",
 "class": "Enemy",
 "language": "GDScript",
@@ -29,6 +39,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Menus/GameOverMenu.gd"
 }, {
+"base": "HBoxContainer",
+"class": "GameUI",
+"language": "GDScript",
+"path": "res://Menus/GameUI.gd"
+}, {
 "base": "Area2D",
 "class": "Hitbox",
 "language": "GDScript",
@@ -39,7 +54,7 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Overlap/Hurtbox.gd"
 }, {
-"base": "Node2D",
+"base": "Node",
 "class": "MainGame",
 "language": "GDScript",
 "path": "res://Game.gd"
@@ -48,11 +63,6 @@ _global_script_classes=[ {
 "class": "MainMenu",
 "language": "GDScript",
 "path": "res://Menus/MainMenu.gd"
-}, {
-"base": "Area2D",
-"class": "Pickup",
-"language": "GDScript",
-"path": "res://Player/Pickup.gd"
 }, {
 "base": "KinematicBody2D",
 "class": "Player",
@@ -63,25 +73,21 @@ _global_script_classes=[ {
 "class": "PlayerStats",
 "language": "GDScript",
 "path": "res://Player/PlayerStats.gd"
-}, {
-"base": "Node2D",
-"class": "Projectile",
-"language": "GDScript",
-"path": "res://Player/Projectile.gd"
 } ]
 _global_script_class_icons={
 "Block": "",
+"BlockParticle": "",
+"CollectibleItem": "",
 "Enemy": "",
 "EnemyStats": "",
 "GameOverMenu": "",
+"GameUI": "",
 "Hitbox": "",
 "Hurtbox": "",
 "MainGame": "",
 "MainMenu": "",
-"Pickup": "",
 "Player": "",
-"PlayerStats": "",
-"Projectile": ""
+"PlayerStats": ""
 }
 
 [application]

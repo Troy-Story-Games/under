@@ -5,6 +5,6 @@ const BlockDestroyEffect = preload("res://Effects/BlockDestroyEffect.tscn")
 
 
 func dig() -> void:
-    var particles: CPUParticles2D = Utils.instance_scene_on_main(BlockDestroyEffect, global_position)
-    particles.emitting = true
+    # warning-ignore:return_value_discarded
+    Utils.instance_scene_on_main(BlockDestroyEffect, global_position)
     queue_free()
