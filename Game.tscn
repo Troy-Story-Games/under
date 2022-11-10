@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=4 format=2]
 
 [ext_resource path="res://Player/Player.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Game.gd" type="Script" id=2]
@@ -6,10 +6,7 @@
 [sub_resource type="RectangleShape2D" id=1]
 extents = Vector2( 3, 72 )
 
-[sub_resource type="RectangleShape2D" id=2]
-extents = Vector2( 88, 10 )
-
-[node name="Game" type="Node2D"]
+[node name="MainGame" type="Node2D"]
 script = ExtResource( 2 )
 
 [node name="Camera2D" type="Camera2D" parent="."]
@@ -25,25 +22,23 @@ position = Vector2( 85, 70 )
 remote_path = NodePath("../../Camera2D")
 
 [node name="LeftWall" type="KinematicBody2D" parent="."]
-position = Vector2( 0, 72 )
+position = Vector2( 32, 72 )
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]
+position = Vector2( -3, 0 )
 shape = SubResource( 1 )
 
 [node name="RightWall" type="KinematicBody2D" parent="."]
-position = Vector2( 160, 72 )
+position = Vector2( 128, 72 )
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
+position = Vector2( 3, 0 )
 shape = SubResource( 1 )
 
-[node name="StaticBody2D" type="StaticBody2D" parent="."]
-position = Vector2( 85, 102 )
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D"]
-position = Vector2( -3, -1 )
-shape = SubResource( 2 )
+[node name="NewRowSpawn" type="Position2D" parent="."]
+position = Vector2( 32, 90 )
 
 [editable path="Player"]
 [editable path="Player/Hurtbox"]

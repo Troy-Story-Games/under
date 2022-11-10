@@ -5,7 +5,7 @@
 [ext_resource path="res://Assets/Player.png" type="Texture" id=3]
 
 [sub_resource type="RectangleShape2D" id=6]
-extents = Vector2( 3, 4 )
+extents = Vector2( 2, 3.5 )
 
 [sub_resource type="Animation" id=2]
 resource_name = "Idle"
@@ -42,7 +42,7 @@ tracks/0/keys = {
 }
 
 [sub_resource type="RectangleShape2D" id=7]
-extents = Vector2( 3, 4 )
+extents = Vector2( 2, 3.5 )
 
 [node name="Player" type="KinematicBody2D" groups=["Persists", "Player"]]
 collision_layer = 2
@@ -53,6 +53,7 @@ texture = ExtResource( 3 )
 hframes = 11
 
 [node name="Collider" type="CollisionShape2D" parent="."]
+position = Vector2( 0, 0.5 )
 shape = SubResource( 6 )
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="."]
@@ -65,6 +66,7 @@ anims/Run = SubResource( 5 )
 collision_layer = 4
 
 [node name="Collider" parent="Hurtbox" index="0"]
+position = Vector2( 0, 0.5 )
 shape = SubResource( 7 )
 
 [node name="CoyoteJumpTimer" type="Timer" parent="."]

@@ -3,19 +3,23 @@ class_name Player
 
 signal player_died()
 
-export(int) var ACCELERATION = 512
-export(int) var MAX_SPEED = 64
-export(float) var FRICTION = 0.25
+export(int) var ACCELERATION = 256
+export(int) var MAX_SPEED = 32
+export(float) var FRICTION = 0.5
 export(int) var GRAVITY = 200
-export(int) var JUMP_FORCE = 128
-export(int) var WALL_SLIDE_SPEED = 48
-export(int) var MAX_WALL_SLIDE_SPEED = 128
+export(int) var JUMP_FORCE = 64
+export(int) var WALL_SLIDE_SPEED = 24
+export(int) var MAX_WALL_SLIDE_SPEED = 64
 
 enum {
     MOVE,
-    WALL_SLIDE
+    WALL_SLIDE,
+    DIG
 }
 
+var wall_collision: KinematicCollision2D = null
+var floor_collision: KinematicCollision2D = null
+var dig_block: Block = null
 var state = MOVE
 var motion = Vector2.ZERO
 var just_jumped = false
@@ -45,6 +49,7 @@ func _physics_process(delta):
             update_animations(input_vector)
             move()
             wall_slide_check()
+            dig_check()
 
         WALL_SLIDE:
             var wall_axis = get_wall_axis()
@@ -61,6 +66,16 @@ func _physics_process(delta):
 
             # Switch back to move state if we aren't on wall anymore
             wall_detach(delta, wall_axis)
+
+        DIG:
+            if not dig_block or not is_instance_valid(dig_block):
+                dig_block = null
+                state = MOVE
+            else:
+                dig_block.dig()
+
+            if Input.is_action_just_released("ui_down") or Input.is_action_just_released("ui_left") or Input.is_action_just_released("ui_right"):
+                state = MOVE
 
 
 func get_input_vector():
@@ -100,13 +115,11 @@ func jump(force):
 
 
 func apply_gravity(delta):
-    if not is_on_floor():
-        motion.y += GRAVITY * delta
-        motion.y = min(motion.y, JUMP_FORCE)
+    motion.y += GRAVITY * delta
+    motion.y = min(motion.y, JUMP_FORCE)
 
 
 func update_animations(input_vector):
-
     if input_vector.x != 0:
         sprite.scale.x = sign(input_vector.x)
         animationPlayer.play("Run")
@@ -118,6 +131,14 @@ func update_animations(input_vector):
         pass  # TODO: Play jump animation
 
 
+func on_floor():
+    return floor_collision != null
+
+
+func on_wall():
+    return wall_collision != null
+
+
 func move():
     var was_in_air = not is_on_floor()
     var was_on_floor = is_on_floor()
@@ -125,6 +146,18 @@ func move():
     var last_position = position
 
     motion = move_and_slide(motion, Vector2.UP)
+
+    if is_on_floor():
+        var test_floor: Vector2 = Vector2(0, last_motion.y)
+        floor_collision = move_and_collide(test_floor, true, true, true)
+    else:
+        floor_collision = null
+
+    if is_on_wall():
+        var test_wall: Vector2 = Vector2(last_motion.x, 0)
+        wall_collision = move_and_collide(test_wall, true, true, true)
+    else:
+        wall_collision = null
 
     # Happens on landing
     if was_in_air and is_on_floor():
@@ -181,6 +214,20 @@ func wall_detach(delta, wall_axis):
 
     if wall_axis == 0 or is_on_floor():
         state = MOVE
+
+
+func dig_check():
+    if (Input.is_action_pressed("ui_right") or Input.is_action_pressed("ui_left")) and wall_collision and is_on_floor():
+        var collider: Node = wall_collision.collider
+        if collider is Block:
+            dig_block = collider
+            state = DIG
+
+    if Input.is_action_pressed("ui_down") and floor_collision:
+        var collider: Node = floor_collision.collider
+        if collider is Block:
+            dig_block = collider
+            state = DIG
 
 
 func _on_died():
