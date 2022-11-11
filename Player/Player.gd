@@ -176,7 +176,6 @@ func move():
     if was_on_floor and not on_floor() and not just_jumped:
         # Fix for little hop if you fall off a ledge after
         # climbing a slope
-        print("coyote")
         motion.y = 0
         position.y = last_position.y
         coyoteJumpTimer.start()
