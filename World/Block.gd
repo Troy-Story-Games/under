@@ -15,6 +15,7 @@ func _ready() -> void:
 func dig() -> void:
     # warning-ignore:return_value_discarded
     Utils.instance_scene_on_main(BlockDestroyEffect, global_position)
+    SoundFx.play("digging", 1, -25)
     queue_free()
 
 

@@ -24,16 +24,6 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Pickup/CollectibleItem.gd"
 }, {
-"base": "KinematicBody2D",
-"class": "Enemy",
-"language": "GDScript",
-"path": "res://Enemies/Enemy.gd"
-}, {
-"base": "Node",
-"class": "EnemyStats",
-"language": "GDScript",
-"path": "res://Enemies/EnemyStats.gd"
-}, {
 "base": "CenterContainer",
 "class": "GameOverMenu",
 "language": "GDScript",
@@ -83,8 +73,6 @@ _global_script_class_icons={
 "Block": "",
 "BlockParticle": "",
 "CollectibleItem": "",
-"Enemy": "",
-"EnemyStats": "",
 "GameOverMenu": "",
 "GameUI": "",
 "Hitbox": "",
@@ -110,8 +98,8 @@ config/icon="res://icon.png"
 Events="*res://Utils/Events.gd"
 SaveAndLoad="*res://Utils/SaveAndLoad.gd"
 Utils="*res://Utils/Utils.gd"
-SoundFx="*res://SoundFX/SoundFX.gd"
-Music="*res://Music/Music.gd"
+Music="*res://Music/Music.tscn"
+SoundFx="*res://SoundFX/SoundFX.tscn"
 
 [debug]
 
@@ -160,6 +148,10 @@ texture={
 "svg/scale": 1.0
 }
 ogg_vorbis={
+"loop": false,
+"loop_offset": 0
+}
+mp3={
 "loop": false,
 "loop_offset": 0
 }

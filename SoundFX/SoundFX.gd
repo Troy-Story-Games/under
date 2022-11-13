@@ -1,11 +1,7 @@
 extends Node
 
-# Auto-load singleton to play sound effects
-
 var sounds_path = "res://SoundFX/sounds/"
 var sounds := {}
-
-onready var sound_players := get_children()
 
 
 func _ready():
@@ -35,11 +31,11 @@ func load_sound_fx():
 
 
 func play(sound_string : String, pitch_scale : float = 1, volume_db : float = 0):
-    for player in sound_players:
-        if not player.playing:
-            player.pitch_scale = pitch_scale
-            player.volume_db = volume_db
-            player.stream = sounds[sound_string]
-            player.play()
-            return
-    print("WARNING: Too many sounds playing at once!")
+        var player: AudioStreamPlayer = AudioStreamPlayer.new()
+        player.pitch_scale = pitch_scale
+        player.volume_db = volume_db
+        player.stream = sounds[sound_string]
+        player.bus = "SoundFX"
+        var main := get_tree().current_scene
+        main.add_child(player)
+        player.play()

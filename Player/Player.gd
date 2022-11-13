@@ -29,7 +29,7 @@ var playerStats : PlayerStats = Utils.get_player_stats()
 
 onready var sprite = $Sprite
 onready var cameraFollow = $CameraFollow
-onready var footstepPlayer = $FootStepPlayer
+onready var footstepPlayer = $FootstepAudioStreamPlayer2D
 onready var coyoteJumpTimer = $CoyoteJumpTimer
 onready var animationPlayer = $AnimationPlayer
 onready var safeSpawnArea = $SafeSpawnArea
@@ -140,7 +140,7 @@ func jump_check():
 
 
 func jump(force):
-    SoundFx.play("jump")
+    SoundFx.play("jump", 1, -25)
     motion.y = -force
 
 

@@ -11,7 +11,7 @@ extents = Vector2( 3.75805, 4 )
 extents = Vector2( 4, 1.5 )
 
 [sub_resource type="RectangleShape2D" id=4]
-extents = Vector2( 4, 24.5 )
+extents = Vector2( 3, 24 )
 
 [node name="Rock" type="KinematicBody2D" groups=["WorldBlocks"]]
 script = ExtResource( 1 )

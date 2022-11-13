@@ -95,10 +95,10 @@ collision_layer = 0
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SafeSpawnArea"]
 shape = SubResource( 9 )
 
-[node name="FootStepPlayer" type="AudioStreamPlayer2D" parent="."]
+[node name="FootstepAudioStreamPlayer2D" type="AudioStreamPlayer2D" parent="."]
 stream = ExtResource( 4 )
-volume_db = -10.0
-pitch_scale = 0.5
+volume_db = -45.0
+pitch_scale = 0.72
 
 [connection signal="take_damage" from="Hurtbox" to="." method="_on_Hurtbox_take_damage"]
 [connection signal="body_entered" from="ItemCollector" to="." method="_on_ItemCollector_body_entered"]
