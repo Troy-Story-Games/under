@@ -5,14 +5,14 @@ class_name PlayerStats
 # Retrieve a shared instance with Utils.get_player_stats()
 # from anywhere this is needed.
 
+signal game_over()
 signal player_died()
 signal player_health_changed(value)
-signal player_max_health_changed(value)
 signal player_dirt_changed(value)
 
+var lives: int = 3 setget set_lives
 var dirt: int = 0 setget set_dirt
-var max_health : int = 1 setget set_max_health
-onready var health : int = max_health setget set_health
+var health : int = 1 setget set_health
 
 
 func set_dirt(value: int):
@@ -20,19 +20,25 @@ func set_dirt(value: int):
     emit_signal("player_dirt_changed", dirt)
 
 
+func set_lives(value: int):
+    lives = int(max(value, 0))
+    if lives == 0:
+        emit_signal("game_over")
+
+
 func set_health(value : int):
-    health = int(clamp(value, 0, max_health))
+    health = int(clamp(value, 0, 1))
     emit_signal("player_health_changed", health)
     if health == 0:
         emit_signal("player_died")
 
 
-func set_max_health(value : int):
-    max_health = value
-    self.health = int(min(self.health, max_health))
-    emit_signal("player_max_health_changed", max_health)
+func respawn():
+    self.health = 1
+    self.dirt = 0
 
 
 func refill_stats():
-    self.health = self.max_health
-    # TODO: Add any other stats that need to be refilled.
+    self.health = 1
+    self.dirt = 0
+    self.lives = 3

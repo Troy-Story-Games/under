@@ -1,0 +1,52 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://World/Rock.gd" type="Script" id=1]
+[ext_resource path="res://Assets/Blocks.png" type="Texture" id=2]
+[ext_resource path="res://Overlap/Hitbox.tscn" type="PackedScene" id=3]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 3.75805, 4 )
+
+[sub_resource type="RectangleShape2D" id=3]
+extents = Vector2( 4, 1.5 )
+
+[sub_resource type="RectangleShape2D" id=4]
+extents = Vector2( 4, 24.5 )
+
+[node name="Rock" type="KinematicBody2D" groups=["WorldBlocks"]]
+script = ExtResource( 1 )
+
+[node name="Sprite" type="Sprite" parent="."]
+texture = ExtResource( 2 )
+hframes = 6
+frame = 4
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 1 )
+
+[node name="VisibilityNotifier2D" type="VisibilityNotifier2D" parent="."]
+
+[node name="FallDelayTimer" type="Timer" parent="."]
+one_shot = true
+
+[node name="Hitbox" parent="." instance=ExtResource( 3 )]
+collision_mask = 4
+
+[node name="Collider" parent="Hitbox" index="0"]
+position = Vector2( 0, 3.5 )
+shape = SubResource( 3 )
+
+[node name="FallZone" type="Area2D" parent="."]
+collision_layer = 0
+collision_mask = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="FallZone"]
+position = Vector2( 0, 20.5 )
+shape = SubResource( 4 )
+
+[connection signal="screen_entered" from="VisibilityNotifier2D" to="." method="_on_VisibilityNotifier2D_screen_entered"]
+[connection signal="screen_exited" from="VisibilityNotifier2D" to="." method="_on_VisibilityNotifier2D_screen_exited"]
+[connection signal="timeout" from="FallDelayTimer" to="." method="_on_FallDelayTimer_timeout"]
+[connection signal="body_entered" from="FallZone" to="." method="_on_FallZone_body_entered"]
+
+[editable path="Hitbox"]

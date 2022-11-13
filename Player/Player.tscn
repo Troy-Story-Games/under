@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://Player/Player.gd" type="Script" id=1]
 [ext_resource path="res://Overlap/Hurtbox.tscn" type="PackedScene" id=2]
@@ -47,8 +47,12 @@ extents = Vector2( 1, 3.3692 )
 [sub_resource type="CircleShape2D" id=8]
 radius = 6.0
 
+[sub_resource type="CircleShape2D" id=9]
+radius = 6.0
+
 [node name="Player" type="KinematicBody2D" groups=["Persists", "Player"]]
 collision_layer = 2
+collision_mask = 33
 script = ExtResource( 1 )
 
 [node name="Sprite" type="Sprite" parent="."]
@@ -83,6 +87,12 @@ collision_mask = 16
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="ItemCollector"]
 shape = SubResource( 8 )
+
+[node name="SafeSpawnArea" type="Area2D" parent="."]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="SafeSpawnArea"]
+shape = SubResource( 9 )
 
 [connection signal="take_damage" from="Hurtbox" to="." method="_on_Hurtbox_take_damage"]
 [connection signal="body_entered" from="ItemCollector" to="." method="_on_ItemCollector_body_entered"]

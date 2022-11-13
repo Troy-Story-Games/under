@@ -7,6 +7,8 @@
 extents = Vector2( 0.5, 0.5 )
 
 [node name="SmallBlockParticle" type="RigidBody2D"]
+z_index = -1
+collision_layer = 32
 can_sleep = false
 script = ExtResource( 2 )
 

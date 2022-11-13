@@ -1,8 +1,6 @@
 extends KinematicBody2D
 class_name Player
 
-signal player_died()
-
 export(int) var ACCELERATION = 256
 export(int) var MAX_SPEED = 32
 export(float) var FRICTION = 0.5
@@ -26,16 +24,18 @@ var state = MOVE
 var motion = Vector2.ZERO
 var just_jumped = false
 var double_jump = true
+var just_spawned = true
 var playerStats : PlayerStats = Utils.get_player_stats()
 
 onready var sprite = $Sprite
+onready var cameraFollow = $CameraFollow
 onready var coyoteJumpTimer = $CoyoteJumpTimer
 onready var animationPlayer = $AnimationPlayer
+onready var safeSpawnArea = $SafeSpawnArea
 
 
 func _ready():
-    # warning-ignore:return_value_discarded
-    playerStats.connect("player_died", self, "_on_died")
+    just_spawned = true
 
 
 func _physics_process(delta):
@@ -78,6 +78,31 @@ func _physics_process(delta):
 
             if Input.is_action_just_released("ui_down") or Input.is_action_just_released("ui_left") or Input.is_action_just_released("ui_right"):
                 state = MOVE
+
+    if just_spawned:
+        # If we just spawned, set to false, then make a safe spawn spot
+        just_spawned = false
+        var spawn_pos = Vector2(global_position.x, global_position.y)
+        while true:
+            # We busy loop, yielding execution once per frame until we've moved
+            # at least 4 pixels. During this time any block (including rocks)
+            # will be deleted to make sure the player spawns back in and is not
+            # stuck
+            yield(get_tree(), "idle_frame")
+            make_safe_spawn()
+
+            if spawn_pos.distance_to(global_position) >= 4:
+                break
+
+
+func make_safe_spawn():
+    var bodies = safeSpawnArea.get_overlapping_bodies()
+    for body in bodies:
+        if not body or not is_instance_valid(body):
+            continue
+        if not body.is_queued_for_deletion() and body.is_in_group("WorldBlocks"):
+            body.queue_free()
+
 
 
 func get_input_vector():
@@ -220,23 +245,22 @@ func wall_detach(delta, wall_axis):
         state = MOVE
 
 
+func assign_camera_follow(remote_path: String):
+    cameraFollow.remote_path = remote_path
+
+
 func dig_check():
     if (Input.is_action_pressed("ui_right") or Input.is_action_pressed("ui_left")) and wall_collision and on_floor():
-        var collider: Node = wall_collision.collider
-        if collider is Block:
-            dig_block = collider
+        var wall_collider: Node = wall_collision.collider
+        if wall_collider is Block:
+            dig_block = wall_collider
             state = DIG
 
     if Input.is_action_pressed("ui_down") and floor_collision:
-        var collider: Node = floor_collision.collider
-        if collider is Block:
-            dig_block = collider
+        var floor_collider: Node = floor_collision.collider
+        if floor_collider is Block:
+            dig_block = floor_collider
             state = DIG
-
-
-func _on_died():
-    emit_signal("player_died")
-    queue_free()
 
 
 func _on_Hurtbox_take_damage(damage : int, _area : Area2D):

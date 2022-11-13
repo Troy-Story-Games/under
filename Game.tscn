@@ -1,6 +1,5 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=4 format=2]
 
-[ext_resource path="res://Player/Player.tscn" type="PackedScene" id=1]
 [ext_resource path="res://Game.gd" type="Script" id=2]
 [ext_resource path="res://Menus/GameUI.tscn" type="PackedScene" id=3]
 
@@ -20,12 +19,6 @@ limit_right = 160
 
 [node name="GameUI" parent="Camera2D/CanvasLayer" instance=ExtResource( 3 )]
 
-[node name="Player" parent="." instance=ExtResource( 1 )]
-position = Vector2( 85, 70 )
-
-[node name="CameraFollow" parent="Player" index="3"]
-remote_path = NodePath("../../Camera2D")
-
 [node name="LeftWall" type="KinematicBody2D" parent="."]
 position = Vector2( 32, 72 )
 collision_mask = 0
@@ -44,6 +37,3 @@ shape = SubResource( 1 )
 
 [node name="NewRowSpawn" type="Position2D" parent="."]
 position = Vector2( 32, 90 )
-
-[editable path="Player"]
-[editable path="Player/Hurtbox"]
