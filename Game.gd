@@ -21,9 +21,22 @@ enum CaveType {
     H_TUNNEL
 }
 
+# Minimum number of pixels the player can be away from the last generated row
+# before we generate a new row.
 export(int) var REGENERATE_BLOCK_THRESHOLD = 80
+
+# How many rows to generate each time we call "generate_more_blocks()"
 export(int) var ROW_BUFFER = 18
+
+# The depth (in number of rows) before caves begin to generate
 export(int) var CAVE_DEPTH = 24
+
+# Chance that the tunnel generator goes down rather than across. For a tunnel
+# that's mostly verticle (V_TUNNEL) we default to 65% of the time the generator
+# chooses to go down. While for a horizontal tunnel (H_TUNNEL) we default to
+# 45% of the time so that the generator usually goes across.
+export(float) var V_TUNNEL_DOWN_FACTOR = 0.65
+export(float) var H_TUNNEL_DOWN_FACTOR = 0.45
 
 onready var player = $Player
 onready var leftWall = $LeftWall
@@ -109,20 +122,23 @@ func should_place_block(pos: Vector2) -> bool:
             CaveType.GAP:
                 cave_carve_pos = Vector2(pos.x, pos.y)
                 cave_type_data.width = NUM_COLS * BLOCK_SIZE
-                cave_type_data.height = int(rand_range(4, 6)) * BLOCK_SIZE
+                cave_type_data.height = int(rand_range(4, 5)) * BLOCK_SIZE
             CaveType.V_TUNNEL:
-                cave_type_data.tunnel_down_factor = 0.65
+                cave_type_data.tunnel_down_factor = V_TUNNEL_DOWN_FACTOR
                 cave_type_data.width = 1 * BLOCK_SIZE
                 cave_type_data.height = 1 * BLOCK_SIZE
             CaveType.H_TUNNEL:
-                cave_type_data.tunnel_down_factor = 0.45
+                cave_type_data.tunnel_down_factor = H_TUNNEL_DOWN_FACTOR
                 cave_type_data.width = 1 * BLOCK_SIZE
                 cave_type_data.height = 1 * BLOCK_SIZE
 
-    if pos.x >= cave_carve_pos.x and pos.x < (cave_carve_pos.x + cave_type_data.width) and pos.y < (cave_carve_pos.y + cave_type_data.height):
+    if (pos.x >= cave_carve_pos.x and
+        pos.x < (cave_carve_pos.x + cave_type_data.width) and
+        pos.y < (cave_carve_pos.y + cave_type_data.height)):
 
         # Handle the tunneling case where we move the position each time
-        if (cave_carve_type == CaveType.V_TUNNEL or cave_carve_type == CaveType.H_TUNNEL) and pos.x <= (cave_carve_pos.x + (NUM_COLS * BLOCK_SIZE)):
+        if ((cave_carve_type == CaveType.V_TUNNEL or cave_carve_type == CaveType.H_TUNNEL) and
+            pos.x <= (cave_carve_pos.x + (NUM_COLS * BLOCK_SIZE))):
             if randf() <= cave_type_data.tunnel_down_factor:
                 cave_carve_pos.y += BLOCK_SIZE
             else:
