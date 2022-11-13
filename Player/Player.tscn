@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=2]
+[gd_scene load_steps=11 format=2]
 
 [ext_resource path="res://Player/Player.gd" type="Script" id=1]
 [ext_resource path="res://Overlap/Hurtbox.tscn" type="PackedScene" id=2]
 [ext_resource path="res://Assets/Player.png" type="Texture" id=3]
+[ext_resource path="res://Player/footsteps.ogg" type="AudioStream" id=4]
 
 [sub_resource type="RectangleShape2D" id=6]
 extents = Vector2( 1, 3.35877 )
@@ -93,6 +94,11 @@ collision_layer = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="SafeSpawnArea"]
 shape = SubResource( 9 )
+
+[node name="FootStepPlayer" type="AudioStreamPlayer2D" parent="."]
+stream = ExtResource( 4 )
+volume_db = -10.0
+pitch_scale = 0.5
 
 [connection signal="take_damage" from="Hurtbox" to="." method="_on_Hurtbox_take_damage"]
 [connection signal="body_entered" from="ItemCollector" to="." method="_on_ItemCollector_body_entered"]

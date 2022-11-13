@@ -159,6 +159,10 @@ texture={
 "stream": false,
 "svg/scale": 1.0
 }
+ogg_vorbis={
+"loop": false,
+"loop_offset": 0
+}
 
 [input]
 
@@ -206,7 +210,6 @@ jump={
 2d_physics/layer_3="PlayerHurtbox"
 2d_physics/layer_4="EnemyHurtbox"
 2d_physics/layer_5="Pickup"
-2d_physics/layer_6="Dirt"
 
 [physics]
 

@@ -29,6 +29,7 @@ var playerStats : PlayerStats = Utils.get_player_stats()
 
 onready var sprite = $Sprite
 onready var cameraFollow = $CameraFollow
+onready var footstepPlayer = $FootStepPlayer
 onready var coyoteJumpTimer = $CoyoteJumpTimer
 onready var animationPlayer = $AnimationPlayer
 onready var safeSpawnArea = $SafeSpawnArea
@@ -139,6 +140,7 @@ func jump_check():
 
 
 func jump(force):
+    SoundFx.play("jump")
     motion.y = -force
 
 
@@ -151,8 +153,11 @@ func update_animations(input_vector):
     if input_vector.x != 0:
         sprite.scale.x = sign(input_vector.x)
         animationPlayer.play("Run")
+        if not footstepPlayer.playing:
+            footstepPlayer.play()
     else:
         animationPlayer.play("Idle")
+        footstepPlayer.stop()
 
     # Override run/idle if we're in the air
     if not on_floor():
