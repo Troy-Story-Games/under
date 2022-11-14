@@ -12,6 +12,7 @@ var falling := false
 var restore_pos : Vector2 = Vector2.ZERO
 var floor_collision : KinematicCollision2D = null
 var floor_collider: Node2D = null
+var player: Player = null
 
 onready var sprite = $Sprite
 onready var collider = $CollisionShape2D
@@ -57,6 +58,10 @@ func _physics_process(delta: float) -> void:
         hitboxCollider.disabled = true
         falling = false
 
+    if player and not on_floor() and fallDelayTimer.time_left == 0:
+        fallDelayTimer.start(FALL_DELAY)
+        restore_pos = Vector2(sprite.position.x, sprite.position.y)
+
 
 func adjust_position():
     var x_pos = position.x
@@ -94,6 +99,10 @@ func _on_FallDelayTimer_timeout() -> void:
 
 
 func _on_FallZone_body_entered(body: Node) -> void:
-    if body is Player and not on_floor():
-        fallDelayTimer.start(FALL_DELAY)
-        restore_pos = Vector2(sprite.position.x, sprite.position.y)
+    if body is Player:
+        player = body
+
+
+func _on_FallZone_body_exited(body):
+    if body is Player:
+        player = null

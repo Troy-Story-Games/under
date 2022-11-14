@@ -1,19 +1,21 @@
 extends KinematicBody2D
 class_name Player
 
-export(int) var ACCELERATION = 256
+export(int) var ACCELERATION = 150
 export(int) var MAX_SPEED = 32
-export(float) var FRICTION = 0.5
+export(float) var FRICTION = 0.65
 export(int) var GRAVITY = 200
 export(int) var JUMP_FORCE = 85
-export(int) var WALL_SLIDE_SPEED = 24
-export(int) var MAX_WALL_SLIDE_SPEED = 64
+export(int) var WALL_SLIDE_SPEED = 5
+export(int) var MAX_WALL_SLIDE_SPEED = 85
 export(int) var CLOSE_CEILING_DISTANCE = 4
+export(float) var DOUBLE_PRESS_TIMEOUT = 0.5
 
 enum {
     MOVE,
     WALL_SLIDE,
-    DIG
+    DIG,
+    GROUND_POUND
 }
 
 var wall_collision: KinematicCollision2D = null
@@ -22,10 +24,12 @@ var ceiling_collision: KinematicCollision2D = null
 var dig_block: Block = null
 var state = MOVE
 var motion = Vector2.ZERO
+var wall_slide_enabled = true
 var just_jumped = false
 var double_jump = true
 var just_spawned = true
 var playerStats : PlayerStats = Utils.get_player_stats()
+var double_press_button = null
 
 onready var sprite = $Sprite
 onready var cameraFollow = $CameraFollow
@@ -40,7 +44,6 @@ func _ready():
 
 
 func _physics_process(delta):
-    
     just_jumped = false
 
     match state:
@@ -53,6 +56,7 @@ func _physics_process(delta):
             update_animations(input_vector)
             move()
             wall_slide_check()
+            double_press_check()
             dig_check()
 
         WALL_SLIDE:
@@ -68,8 +72,13 @@ func _physics_process(delta):
 
             move()  # We gotta move
 
-            # Switch back to move state if we aren't on wall anymore
-            wall_detach(delta, wall_axis)
+            # This can switch the state to something else (ground pound or dig)
+            double_press_check()
+
+            # If we switched state with double_press_check() don't detach, b/c we already did
+            if state == WALL_SLIDE:
+                # Switch back to move state if we aren't on wall anymore
+                wall_detach(delta, wall_axis)
 
         DIG:
             if not dig_block or not is_instance_valid(dig_block):
@@ -80,6 +89,10 @@ func _physics_process(delta):
 
             if Input.is_action_just_released("ui_down") or Input.is_action_just_released("ui_left") or Input.is_action_just_released("ui_right"):
                 state = MOVE
+
+        GROUND_POUND:
+            print("GROUND POUND!!!")
+            state = MOVE
 
     if just_spawned:
         # If we just spawned, set to false, then make a safe spawn spot
@@ -163,7 +176,7 @@ func update_animations(input_vector):
     # Override run/idle if we're in the air
     if not on_floor():
         footstepPlayer.stop()
-          # TODO: Play jump animation
+        # TODO: Play jump animation
 
 
 func on_floor():
@@ -176,6 +189,65 @@ func on_wall():
 
 func ceiling_close():
     return ceiling_collision != null
+
+
+func double_press_dig():
+    if state != WALL_SLIDE:
+        return
+
+    var right_wall: KinematicCollision2D = move_and_collide(Vector2.RIGHT, true, true, true)
+    var left_wall: KinematicCollision2D = move_and_collide(Vector2.LEFT, true, true, true)
+    var collider = null
+    if right_wall:
+        print("HERE RIGHT")
+        collider = right_wall.collider
+    elif left_wall:
+        print("HERE LEFT")
+        collider = left_wall.collider
+
+    print("HERE", collider)
+    if collider == null or not collider is Block:
+        return
+
+    print("HERE END")
+    dig_block = collider
+    state = DIG
+
+
+func double_press_check():
+    if Input.is_action_just_pressed("ui_right") and double_press_button == null:
+        double_press_button = "ui_right"
+        yield(get_tree().create_timer(DOUBLE_PRESS_TIMEOUT), "timeout")
+        double_press_button = null
+    if Input.is_action_just_pressed("ui_right") and double_press_button == "ui_right":
+        print("DOUBLE PRESS RIGHT!")
+        double_press_dig()
+        double_press_button = null
+
+    if Input.is_action_just_pressed("ui_left") and double_press_button == null:
+        double_press_button = "ui_left"
+        yield(get_tree().create_timer(DOUBLE_PRESS_TIMEOUT), "timeout")
+        double_press_button = null
+    if Input.is_action_just_pressed("ui_left") and double_press_button == "ui_left":
+        print("DOUBLE PRESS LEFT!")
+        double_press_dig()
+        double_press_button = null
+
+    if (Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump")) and double_press_button == null:
+        double_press_button = "ui_up"
+        yield(get_tree().create_timer(DOUBLE_PRESS_TIMEOUT), "timeout")
+        double_press_button = null
+    if (Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump")) and double_press_button == "ui_up":
+        print("DOUBLE PRESS UP!")
+        double_press_button = null
+
+    if Input.is_action_just_pressed("ui_down") and double_press_button == null:
+        double_press_button = "ui_down"
+        yield(get_tree().create_timer(DOUBLE_PRESS_TIMEOUT), "timeout")
+        double_press_button = null
+    if Input.is_action_just_pressed("ui_down") and double_press_button == "ui_down":
+        print("DOUBLE PRESS DOWN!")
+        double_press_button = null
 
 
 func move():
@@ -214,7 +286,14 @@ func move():
 
 
 func wall_slide_check():
-    if not on_floor() and on_wall():
+    if (not wall_slide_enabled and
+        (Input.is_action_just_pressed("ui_left") or
+         Input.is_action_just_pressed("ui_right") or
+         Input.is_action_just_pressed("jump") or
+         Input.is_action_just_pressed("ui_up"))):
+        wall_slide_enabled = true
+
+    if not on_floor() and on_wall() and wall_slide_enabled:
         state = WALL_SLIDE
         double_jump = true
 
@@ -242,11 +321,19 @@ func wall_slide_drop(delta):
 
 func wall_detach(delta, wall_axis):
     if Input.is_action_just_pressed("ui_right"):
+        if wall_axis == 1:
+            wall_slide_enabled = false
         motion.x = ACCELERATION * delta
         state = MOVE
 
     if Input.is_action_just_pressed("ui_left"):
+        if wall_axis == -1:
+            wall_slide_enabled = false
         motion.x = -ACCELERATION * delta
+        state = MOVE
+
+    if Input.is_action_just_released("ui_down"):
+        wall_slide_enabled = false
         state = MOVE
 
     if wall_axis == 0 or on_floor():
@@ -268,6 +355,12 @@ func dig_check():
         var floor_collider: Node = floor_collision.collider
         if floor_collider is Block:
             dig_block = floor_collider
+            state = DIG
+
+    if (Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("ui_up")) and ceiling_collision and ceiling_close():
+        var ceiling_collider: Node = ceiling_collision.collider
+        if ceiling_collider is Block:
+            dig_block = ceiling_collider
             state = DIG
 
 

@@ -48,5 +48,6 @@ shape = SubResource( 4 )
 [connection signal="screen_exited" from="VisibilityNotifier2D" to="." method="_on_VisibilityNotifier2D_screen_exited"]
 [connection signal="timeout" from="FallDelayTimer" to="." method="_on_FallDelayTimer_timeout"]
 [connection signal="body_entered" from="FallZone" to="." method="_on_FallZone_body_entered"]
+[connection signal="body_exited" from="FallZone" to="." method="_on_FallZone_body_exited"]
 
 [editable path="Hitbox"]
