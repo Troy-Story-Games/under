@@ -40,6 +40,7 @@ func _ready():
 
 
 func _physics_process(delta):
+    
     just_jumped = false
 
     match state:
@@ -153,7 +154,7 @@ func update_animations(input_vector):
     if input_vector.x != 0:
         sprite.scale.x = sign(input_vector.x)
         animationPlayer.play("Run")
-        if not footstepPlayer.playing:
+        if not footstepPlayer.playing and on_floor():
             footstepPlayer.play()
     else:
         animationPlayer.play("Idle")
@@ -161,7 +162,8 @@ func update_animations(input_vector):
 
     # Override run/idle if we're in the air
     if not on_floor():
-        pass  # TODO: Play jump animation
+        footstepPlayer.stop()
+          # TODO: Play jump animation
 
 
 func on_floor():
@@ -225,6 +227,7 @@ func get_wall_axis():
 
 func wall_slide_jump_check(wall_axis):
     if (Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump")):
+        SoundFx.play("jump", 1, -25)
         motion.x = wall_axis * MAX_SPEED
         motion.y = -JUMP_FORCE/1.25
         state = MOVE
