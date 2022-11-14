@@ -35,7 +35,6 @@ func set_health(value : int):
 
 func respawn():
     self.health = 1
-    self.dirt = 0
 
 
 func refill_stats():
