@@ -17,7 +17,7 @@ hframes = 2
 shape = SubResource( 1 )
 
 [node name="Timer" type="Timer" parent="."]
-wait_time = 30.0
+wait_time = 5.0
 one_shot = true
 autostart = true
 
