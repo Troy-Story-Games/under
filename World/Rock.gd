@@ -1,8 +1,8 @@
 extends KinematicBody2D
 class_name Rock
 
-export(int) var MIN_ROCK_SCALE = 1
-export(int) var MAX_ROCK_SCALE = 1
+const BlockDestroyEffect = preload("res://Effects/BlockDestroyEffect.tscn")
+
 export(int) var GRAVITY = 500
 export(int) var MAX_FALL_SPEED = 300
 export(float) var FALL_DELAY = 0.75
@@ -21,12 +21,17 @@ onready var fallDelayTimer = $FallDelayTimer
 
 
 func _ready() -> void:
-    var size = Utils.rand_int_incl(MIN_ROCK_SCALE, MAX_ROCK_SCALE)
-    scale = Vector2(size, size)
     set_physics_process(false)
     hitboxCollider.disabled = true
     collider.disabled = true
     visible = false
+
+
+func dig() -> void:
+    # warning-ignore:return_value_discarded
+    Utils.instance_scene_on_main(BlockDestroyEffect, global_position)
+    SoundFx.play("digging", 1, -25)
+    queue_free()
 
 
 func _physics_process(delta: float) -> void:

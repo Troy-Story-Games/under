@@ -198,18 +198,15 @@ func double_press_dig():
     var right_wall: KinematicCollision2D = move_and_collide(Vector2.RIGHT, true, true, true)
     var left_wall: KinematicCollision2D = move_and_collide(Vector2.LEFT, true, true, true)
     var collider = null
+
     if right_wall:
-        print("HERE RIGHT")
         collider = right_wall.collider
     elif left_wall:
-        print("HERE LEFT")
         collider = left_wall.collider
 
-    print("HERE", collider)
     if collider == null or not collider is Block:
         return
 
-    print("HERE END")
     dig_block = collider
     state = DIG
 

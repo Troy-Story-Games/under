@@ -28,13 +28,13 @@ Button/styles/normal = SubResource( 3 )
 Button/styles/pressed = SubResource( 3 )
 
 [sub_resource type="RectangleShape2D" id=4]
-extents = Vector2( 3, 72 )
+extents = Vector2( 3, 79 )
 
 [sub_resource type="RectangleShape2D" id=5]
 extents = Vector2( 22.5, 37.5 )
 
 [sub_resource type="RectangleShape2D" id=6]
-extents = Vector2( 30.5, 2.5 )
+extents = Vector2( 27.5, 2.5 )
 
 [node name="MainMenu" type="CenterContainer"]
 anchor_right = 1.0
@@ -90,11 +90,12 @@ size_flags_horizontal = 4
 text = "Quit"
 
 [node name="DirtSpawner" parent="." instance=ExtResource( 5 )]
-rotation = 2.09439
+position = Vector2( 6, -2 )
+rotation = 2.87979
 
 [node name="DirtSpawner2" parent="." instance=ExtResource( 5 )]
-position = Vector2( 160, 0 )
-rotation = 4.18878
+position = Vector2( 154, -2 )
+rotation = -2.87979
 
 [node name="Block" parent="." instance=ExtResource( 4 )]
 position = Vector2( 80, 140 )
@@ -105,7 +106,7 @@ position = Vector2( 0, 72 )
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]
-position = Vector2( -3, 0 )
+position = Vector2( -3, -7 )
 shape = SubResource( 4 )
 
 [node name="RightWall" type="KinematicBody2D" parent="."]
@@ -113,7 +114,7 @@ position = Vector2( 160, 72 )
 collision_mask = 0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
-position = Vector2( 3, 0 )
+position = Vector2( 3, -7 )
 shape = SubResource( 4 )
 
 [node name="Buttons" type="StaticBody2D" parent="."]
@@ -130,6 +131,12 @@ position = Vector2( 80, 26 )
 position = Vector2( -0.5, 7.5 )
 shape = SubResource( 6 )
 
+[node name="DirtStopTimer" type="Timer" parent="."]
+wait_time = 120.0
+one_shot = true
+autostart = true
+
 [connection signal="pressed" from="VBoxContainer/VBoxContainer3/Play" to="." method="_on_Play_pressed"]
 [connection signal="pressed" from="VBoxContainer/VBoxContainer3/Options" to="." method="_on_Options_pressed"]
 [connection signal="pressed" from="VBoxContainer/VBoxContainer3/Quit" to="." method="_on_Quit_pressed"]
+[connection signal="timeout" from="DirtStopTimer" to="." method="_on_DirtStopTimer_timeout"]

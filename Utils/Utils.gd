@@ -17,6 +17,10 @@ func get_player_stats() -> Resource:
     return ResourceLoader.load("res://Player/PlayerStats.tres")
 
 
+func get_main_instances() -> Resource:
+    return ResourceLoader.load("res://Utils/MainInstances.tres")
+
+
 func rand_int_incl(to: int, from: int) -> int:
     # Random int b/w to and from inclusive
     return int(rand_range(to, from + 1))

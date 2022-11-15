@@ -54,6 +54,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Game.gd"
 }, {
+"base": "Resource",
+"class": "MainInstances",
+"language": "GDScript",
+"path": "res://Utils/MainInstances.gd"
+}, {
 "base": "CenterContainer",
 "class": "MainMenu",
 "language": "GDScript",
@@ -78,6 +83,11 @@ _global_script_classes=[ {
 "class": "Rock",
 "language": "GDScript",
 "path": "res://World/Rock.gd"
+}, {
+"base": "KinematicBody2D",
+"class": "RockDrop",
+"language": "GDScript",
+"path": "res://World/RockDrop.gd"
 } ]
 _global_script_class_icons={
 "Block": "",
@@ -89,11 +99,13 @@ _global_script_class_icons={
 "Hitbox": "",
 "Hurtbox": "",
 "MainGame": "",
+"MainInstances": "",
 "MainMenu": "",
 "PhysicsDirt": "",
 "Player": "",
 "PlayerStats": "",
-"Rock": ""
+"Rock": "",
+"RockDrop": ""
 }
 
 [application]

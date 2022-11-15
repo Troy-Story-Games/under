@@ -5,6 +5,7 @@ const BlockScene = preload("res://World/Block.tscn")
 const RockScene = preload("res://World/Rock.tscn")
 const PlayerScene = preload("res://Player/Player.tscn")
 const PlayerDeathEffectScene = preload("res://Effects/PlayerDeathEffect.tscn")
+const RockDropScene = preload("res://World/RockDrop.tscn")
 
 enum CaveCarving {
     NOT_CARVING,
@@ -19,6 +20,19 @@ enum CaveType {
     GAP,
     V_TUNNEL,
     H_TUNNEL
+}
+
+# Blocks that spawn as part of level generation
+enum GameHazard {
+    ROCK,
+    BOMB
+}
+
+# Events that happen outside of level generation
+enum GameEvent {
+    ROCK_DROP,
+    FLOOD,
+    TRIP_WIRE
 }
 
 # Minimum number of pixels the player can be away from the last generated row
@@ -38,25 +52,42 @@ export(int) var CAVE_DEPTH = 24
 export(float) var V_TUNNEL_DOWN_FACTOR = 0.65
 export(float) var H_TUNNEL_DOWN_FACTOR = 0.45
 
-# Chance that a rock is generated. Rock size is equal chance of 1, 2, and 3
-export(float) var ROCK_CHANCE = 0.03
+# Chance that a hazard is generated.
+export(float) var HAZARD_CHANCE = 0.05
+
+# The depth (in blocks) at which GameEvents will start
+export(int) var EVENT_START_DEPTH = 24
+
+# Max time to wait b/w game events
+export(int) var EVENT_COOLDOWN_MAX = 20
+
+# Min time to wait b/w game events
+export(int) var EVENT_COOLDOWN_MIN = 1
+
+# The depth (in blocks) at which the event cooldown should be at its minimum value
+export(int) var EVENT_MAX_DIFFICULTY_DEPTH = 500
 
 onready var camera = $Camera2D
 onready var leftWall = $LeftWall
 onready var rightWall = $RightWall
 onready var newRowSpawn = $NewRowSpawn
 onready var gameUI = $Camera2D/CanvasLayer/GameUI
+onready var eventCooldownTimer = $EventCooldownTimer
 
+var event_cooldown_time: float = 0.0
 var spawn_point: Vector2 = Vector2.ZERO
 var player: Player = null
 var playerStats: PlayerStats = Utils.get_player_stats()
-var zero_depth: float = 0
-var current_depth: float = 0
-var cave_depth: float = 0
+var mainInstances: MainInstances = Utils.get_main_instances()
+var zero_depth: float = 0.0
+var current_depth: float = 0.0
+var current_depth_meters: float = 0.0
+var cave_depth: float = 0.0
 var cave_carve_pos = Vector2.ZERO
 var cave_carve_type = CaveType.H_LINE
 var cave_carve_state = CaveCarving.NOT_CARVING
 var cave_type_data = {}
+var left_x_pos: float = 0.0
 
 
 func _ready():
@@ -69,8 +100,10 @@ func _ready():
 
     gameUI.set_dirt(0)
     spawn_point = Vector2((Utils.NUM_COLS * Utils.BLOCK_SIZE) / 2.0, newRowSpawn.position.y - Utils.BLOCK_SIZE * 2)
+    left_x_pos = newRowSpawn.position.x
     zero_depth = newRowSpawn.position.y
     cave_depth = zero_depth + (CAVE_DEPTH * Utils.BLOCK_SIZE)
+    event_cooldown_time = EVENT_COOLDOWN_MAX
     generate_more_blocks()
 
     respawn_player()
@@ -88,8 +121,16 @@ func _process(_delta: float) -> void:
         generate_more_blocks(true)
 
     current_depth = (player.position.y - zero_depth) / float(Utils.BLOCK_SIZE)
-    current_depth *= Utils.BLOCK_SIZE_IN_METERS
-    gameUI.set_depth(ceil(current_depth))
+    current_depth_meters = current_depth * Utils.BLOCK_SIZE_IN_METERS
+    gameUI.set_depth(ceil(current_depth_meters))
+
+    if current_depth >= EVENT_START_DEPTH and eventCooldownTimer.time_left == 0:
+        eventCooldownTimer.start(event_cooldown_time)
+
+    if current_depth <= EVENT_MAX_DIFFICULTY_DEPTH:
+        var depth_difficulty_factor: float = current_depth / float(EVENT_MAX_DIFFICULTY_DEPTH)
+        var new_cooldown_time = (EVENT_COOLDOWN_MAX - EVENT_COOLDOWN_MIN) * (1 - depth_difficulty_factor)
+        event_cooldown_time = clamp(new_cooldown_time, EVENT_COOLDOWN_MIN, EVENT_COOLDOWN_MAX)
 
 
 func _on_PlayerStats_dirt_changed(value: int):
@@ -103,6 +144,8 @@ func _on_PlayerStats_player_died():
     get_tree().paused = true
     yield(get_tree().create_timer(1.0), "timeout")
 
+    # warning-ignore:unsafe_property_access
+    mainInstances.player = null
     player.queue_free()
     var death_effect: CPUParticles2D = Utils.instance_scene_on_main(PlayerDeathEffectScene, spawn_point)
     death_effect.emitting = true
@@ -125,6 +168,8 @@ func respawn_player():
     playerStats.respawn()
     player = Utils.instance_scene_on_main(PlayerScene, spawn_point)
     player.assign_camera_follow(camera.get_path())
+    # warning-ignore:unsafe_property_access
+    mainInstances.player = player
 
 
 func should_place_block(pos: Vector2) -> bool:
@@ -217,10 +262,49 @@ func generate_more_blocks(slow: bool = false):
     cave_carve_state = CaveCarving.NOT_CARVING
 
 
+func spawn_hazard(pos: Vector2):
+    var hazard_types = GameHazard.values()
+    hazard_types.shuffle()
+    var hazard = hazard_types[0]
+
+    match hazard:
+        GameHazard.ROCK:
+            # warning-ignore:return_value_discarded
+            Utils.instance_scene_on_main(RockScene, pos)
+        GameHazard.BOMB:
+            pass
+
+
+func spawn_event():
+    var event_types = GameEvent.values()
+    event_types.shuffle()
+    var event = event_types[0]
+
+    # TODO: Remove this line - it forces all events to be rock drop
+    event = GameEvent.ROCK_DROP
+    # TODO: Remove the above line - it forces all events to be rock drop
+
+    match event:
+        GameEvent.FLOOD:
+            print("FLOOD")
+        GameEvent.ROCK_DROP:
+            print("ROCK DROP")
+            var col = Utils.rand_int_incl(0, Utils.NUM_COLS - 1)
+            var col_x = left_x_pos + (col * Utils.BLOCK_SIZE) + (Utils.BLOCK_SIZE / 2.0)
+            var y_pos = current_depth - (Utils.BLOCK_SIZE * ROW_BUFFER)
+            # warning-ignore:return_value_discarded
+            Utils.instance_scene_on_main(RockDropScene, Vector2(col_x, y_pos))
+        GameEvent.TRIP_WIRE:
+            print("TRIP WIRE")
+
+
 func place_world_block(pos: Vector2) -> void:
-    if randf() < ROCK_CHANCE:
-        # warning-ignore:return_value_discarded
-        Utils.instance_scene_on_main(RockScene, pos)
+    if randf() < HAZARD_CHANCE:
+        spawn_hazard(pos)
     else:
         # warning-ignore:return_value_discarded
         Utils.instance_scene_on_main(BlockScene, pos)
+
+
+func _on_EventCooldownTimer_timeout() -> void:
+    spawn_event()

@@ -37,3 +37,8 @@ shape = SubResource( 1 )
 
 [node name="NewRowSpawn" type="Position2D" parent="."]
 position = Vector2( 32, 90 )
+
+[node name="EventCooldownTimer" type="Timer" parent="."]
+one_shot = true
+
+[connection signal="timeout" from="EventCooldownTimer" to="." method="_on_EventCooldownTimer_timeout"]
