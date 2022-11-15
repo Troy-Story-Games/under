@@ -6,7 +6,7 @@ export(int) var MAX_SPEED = 32
 export(float) var FRICTION = 0.65
 export(int) var GRAVITY = 200
 export(int) var JUMP_FORCE = 85
-export(int) var WALL_SLIDE_SPEED = 5
+export(int) var WALL_SLIDE_SPEED = 32
 export(int) var MAX_WALL_SLIDE_SPEED = 85
 export(int) var CLOSE_CEILING_DISTANCE = 4
 export(float) var DOUBLE_PRESS_TIMEOUT = 0.5
@@ -18,13 +18,18 @@ enum {
     GROUND_POUND
 }
 
+enum WallAxis {
+    RIGHT = -1,
+    NONE = 0,
+    LEFT = 1
+}
+
 var wall_collision: KinematicCollision2D = null
 var floor_collision: KinematicCollision2D = null
 var ceiling_collision: KinematicCollision2D = null
 var dig_block: Block = null
 var state = MOVE
 var motion = Vector2.ZERO
-var wall_slide_enabled = true
 var just_jumped = false
 var double_jump = true
 var just_spawned = true
@@ -65,7 +70,7 @@ func _physics_process(delta):
                 sprite.scale.x = wall_axis  # Face the correct direction
 
             # Check for wall jump
-            wall_slide_jump_check(wall_axis)
+            jump_check()
 
             # Check for falling off wall
             wall_slide_drop(delta)
@@ -138,16 +143,23 @@ func apply_friction(input_vector):
 
 
 func jump_check():
-    if on_floor() or coyoteJumpTimer.time_left > 0:
-        if not ceiling_close():
-            if Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump"):
-                jump(JUMP_FORCE)
-                just_jumped = true
+    var jump_just_pressed: bool = (Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump"))
+    var jump_just_released: bool = (Input.is_action_just_released("ui_up") or Input.is_action_just_released("jump"))
+    var wall_axis = get_wall_axis()
+    if not on_floor() and wall_axis != WallAxis.NONE and jump_just_pressed:
+        # Wall jump
+        motion.x = wall_axis * MAX_SPEED
+        jump(JUMP_FORCE/1.25)
+        just_jumped = true
+    elif (on_floor() or coyoteJumpTimer.time_left > 0) and not ceiling_close() and jump_just_pressed:
+        # Regular jump
+        jump(JUMP_FORCE)
+        just_jumped = true
     else:
-        if (Input.is_action_just_released("ui_up") or Input.is_action_just_released("jump")) and motion.y < -JUMP_FORCE / 2:
+        if jump_just_released and motion.y < -JUMP_FORCE / 2:
             motion.y = -JUMP_FORCE / 2
 
-        if (Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump")) and double_jump == true:
+        if jump_just_pressed and double_jump == true:
             # Handle double jump
             jump(JUMP_FORCE * 0.75)
             double_jump = false
@@ -283,30 +295,20 @@ func move():
 
 
 func wall_slide_check():
-    if (not wall_slide_enabled and
-        (Input.is_action_just_pressed("ui_left") or
-         Input.is_action_just_pressed("ui_right") or
-         Input.is_action_just_pressed("jump") or
-         Input.is_action_just_pressed("ui_up"))):
-        wall_slide_enabled = true
-
-    if not on_floor() and on_wall() and wall_slide_enabled:
-        state = WALL_SLIDE
-        double_jump = true
+    if not on_floor() and on_wall():
+        var wall_axis = get_wall_axis()
+        if wall_axis == WallAxis.LEFT and Input.is_action_pressed("ui_left"):
+            state = WALL_SLIDE
+            double_jump = true
+        if wall_axis == WallAxis.RIGHT and Input.is_action_pressed("ui_right"):
+            state = WALL_SLIDE
+            double_jump = true
 
 
 func get_wall_axis():
     var is_right_wall = test_move(transform, Vector2.RIGHT)
     var is_left_wall = test_move(transform, Vector2.LEFT)
     return int(is_left_wall) - int(is_right_wall)
-
-
-func wall_slide_jump_check(wall_axis):
-    if (Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump")):
-        SoundFx.play("jump", 1, -25)
-        motion.x = wall_axis * MAX_SPEED
-        motion.y = -JUMP_FORCE/1.25
-        state = MOVE
 
 
 func wall_slide_drop(delta):
@@ -317,20 +319,11 @@ func wall_slide_drop(delta):
 
 
 func wall_detach(delta, wall_axis):
-    if Input.is_action_just_pressed("ui_right"):
-        if wall_axis == 1:
-            wall_slide_enabled = false
-        motion.x = ACCELERATION * delta
-        state = MOVE
-
-    if Input.is_action_just_pressed("ui_left"):
-        if wall_axis == -1:
-            wall_slide_enabled = false
+    if wall_axis == WallAxis.LEFT and Input.is_action_just_released("ui_left"):
         motion.x = -ACCELERATION * delta
         state = MOVE
-
-    if Input.is_action_just_released("ui_down"):
-        wall_slide_enabled = false
+    if wall_axis == WallAxis.RIGHT and Input.is_action_just_released("ui_right"):
+        motion.x = ACCELERATION * delta
         state = MOVE
 
     if wall_axis == 0 or on_floor():
