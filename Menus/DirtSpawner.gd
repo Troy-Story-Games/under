@@ -15,6 +15,10 @@ func _on_Timer_timeout():
     spawnDirt()
 
 
+func start():
+    timer.start()
+
+
 func stop():
     timer.stop()
 
