@@ -4,17 +4,20 @@ class_name MainMenu
 var little_guy_start_x = 0
 
 onready var playButton = $"%Play"
-onready var dirtSpawner = $DirtSpawner
-onready var dirtSpawner2 = $DirtSpawner2
-onready var dirtStopTimer = $DirtStopTimer
+onready var littleGuyTimer = $LittleGuyStartTimer
 onready var littleGuy = $MainMenuLittleGuy
-
+onready var mouse = $Mouse
 
 
 func _ready() -> void:
     playButton.grab_focus()
-    dirtStopTimer.start()
+    littleGuyTimer.start()
     little_guy_start_x = littleGuy.global_position.x
+
+
+func _process(_delta):
+    var mouse_pos = get_global_mouse_position()
+    mouse.global_position = mouse_pos
 
 
 func _on_Play_pressed() -> void:
@@ -30,14 +33,10 @@ func _on_Quit_pressed() -> void:
     get_tree().quit()
 
 
-func _on_DirtStopTimer_timeout() -> void:
-    dirtSpawner.stop()
-    dirtSpawner2.stop()
-    littleGuy.start()
-
-
 func _on_MainMenuLittleGuy_stopped():
     littleGuy.global_position.x = little_guy_start_x
-    dirtSpawner.start()
-    dirtSpawner2.start()
-    dirtStopTimer.start()
+    littleGuyTimer.start()
+
+
+func _on_LittleGuyStartTimer_timeout():
+    littleGuy.start()

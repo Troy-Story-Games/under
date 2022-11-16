@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=2]
+[gd_scene load_steps=13 format=2]
 
 [ext_resource path="res://Menus/MainMenu.gd" type="Script" id=1]
 [ext_resource path="res://Fonts/KenneyPixel.ttf" type="DynamicFontData" id=2]
@@ -33,6 +33,9 @@ extents = Vector2( 27, 3 )
 
 [sub_resource type="RectangleShape2D" id=5]
 extents = Vector2( 22.5, 36 )
+
+[sub_resource type="CircleShape2D" id=7]
+radius = 8.0
 
 [node name="MainMenu" type="CenterContainer"]
 anchor_right = 1.0
@@ -102,27 +105,30 @@ text = "Quit"
 [node name="DirtSpawner" parent="." instance=ExtResource( 5 )]
 position = Vector2( 6, -2 )
 rotation = 2.87979
-SPAWN_RATE = 0.025
 
 [node name="DirtSpawner2" parent="." instance=ExtResource( 5 )]
 position = Vector2( 154, -2 )
 rotation = -2.87979
 SPREAD = -65
-SPAWN_RATE = 0.025
 
 [node name="Block" parent="." instance=ExtResource( 4 )]
 position = Vector2( 80, 140 )
 scale = Vector2( 20, 1 )
 
-[node name="DirtStopTimer" type="Timer" parent="."]
+[node name="LittleGuyStartTimer" type="Timer" parent="."]
 wait_time = 10.0
 one_shot = true
 
 [node name="MainMenuLittleGuy" parent="." instance=ExtResource( 6 )]
 position = Vector2( -7, 128 )
 
+[node name="Mouse" type="KinematicBody2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Mouse"]
+shape = SubResource( 7 )
+
 [connection signal="pressed" from="MenuContainer/ButtonContainer/Play" to="." method="_on_Play_pressed"]
 [connection signal="pressed" from="MenuContainer/ButtonContainer/Options" to="." method="_on_Options_pressed"]
 [connection signal="pressed" from="MenuContainer/ButtonContainer/Quit" to="." method="_on_Quit_pressed"]
-[connection signal="timeout" from="DirtStopTimer" to="." method="_on_DirtStopTimer_timeout"]
+[connection signal="timeout" from="LittleGuyStartTimer" to="." method="_on_LittleGuyStartTimer_timeout"]
 [connection signal="stopped" from="MainMenuLittleGuy" to="." method="_on_MainMenuLittleGuy_stopped"]
