@@ -6,10 +6,15 @@ const PhysicsDirtScene = preload("res://Effects/PhysicsDirt.tscn")
 export(int) var MAX_BULLET_SPEED = 65
 export(int) var MIN_BULLET_SPEED = 20
 export(int) var SPREAD = 65
+export(float) var SPAWN_RATE = 0.05
 
 onready var fireDirection = $FireDirection
 onready var dirtSpawnPoint = $DirtSpawnPoint
 onready var timer = $Timer
+
+func _ready():
+    timer.start(SPAWN_RATE)
+
 
 func _on_Timer_timeout():
     spawnDirt()

@@ -1,11 +1,11 @@
-[gd_scene load_steps=16 format=2]
+[gd_scene load_steps=12 format=2]
 
 [ext_resource path="res://Menus/MainMenu.gd" type="Script" id=1]
 [ext_resource path="res://Fonts/KenneyPixel.ttf" type="DynamicFontData" id=2]
 [ext_resource path="res://icon.png" type="Texture" id=3]
 [ext_resource path="res://World/Block.tscn" type="PackedScene" id=4]
 [ext_resource path="res://Menus/DirtSpawner.tscn" type="PackedScene" id=5]
-[ext_resource path="res://Assets/Player.png" type="Texture" id=6]
+[ext_resource path="res://Player/MainMenuLittleGuy.tscn" type="PackedScene" id=6]
 
 [sub_resource type="StyleBoxTexture" id=3]
 texture = ExtResource( 3 )
@@ -33,32 +33,6 @@ extents = Vector2( 27, 3 )
 
 [sub_resource type="RectangleShape2D" id=5]
 extents = Vector2( 22.5, 36 )
-
-[sub_resource type="RectangleShape2D" id=4]
-extents = Vector2( 3, 79 )
-
-[sub_resource type="CircleShape2D" id=10]
-radius = 83.0542
-
-[sub_resource type="CircleShape2D" id=7]
-radius = 4.0
-
-[sub_resource type="Animation" id=9]
-resource_name = "Run"
-length = 0.6
-loop = true
-tracks/0/type = "value"
-tracks/0/path = NodePath(".:frame")
-tracks/0/interp = 1
-tracks/0/loop_wrap = true
-tracks/0/imported = false
-tracks/0/enabled = true
-tracks/0/keys = {
-"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.4, 0.5 ),
-"transitions": PoolRealArray( 1, 1, 1, 1, 1, 1 ),
-"update": 1,
-"values": [ 5, 6, 7, 8, 9, 10 ]
-}
 
 [node name="MainMenu" type="CenterContainer"]
 anchor_right = 1.0
@@ -128,67 +102,27 @@ text = "Quit"
 [node name="DirtSpawner" parent="." instance=ExtResource( 5 )]
 position = Vector2( 6, -2 )
 rotation = 2.87979
+SPAWN_RATE = 0.025
 
 [node name="DirtSpawner2" parent="." instance=ExtResource( 5 )]
 position = Vector2( 154, -2 )
 rotation = -2.87979
+SPREAD = -65
+SPAWN_RATE = 0.025
 
 [node name="Block" parent="." instance=ExtResource( 4 )]
 position = Vector2( 80, 140 )
 scale = Vector2( 20, 1 )
 
-[node name="LeftWall" type="StaticBody2D" parent="."]
-position = Vector2( 0, 72 )
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LeftWall"]
-position = Vector2( -3, -7 )
-shape = SubResource( 4 )
-
-[node name="RightWall" type="StaticBody2D" parent="."]
-position = Vector2( 160, 72 )
-collision_mask = 0
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="RightWall"]
-position = Vector2( 3, -7 )
-shape = SubResource( 4 )
-
 [node name="DirtStopTimer" type="Timer" parent="."]
 wait_time = 10.0
 one_shot = true
 
-[node name="LittleGuy" type="Sprite" parent="."]
-position = Vector2( -3, 132 )
-texture = ExtResource( 6 )
-hframes = 11
-frame = 5
-
-[node name="TriggerArea" type="Area2D" parent="LittleGuy"]
-collision_layer = 0
-collision_mask = 32
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LittleGuy/TriggerArea"]
-shape = SubResource( 10 )
-disabled = true
-
-[node name="CollectDirtArea" type="Area2D" parent="LittleGuy"]
-collision_layer = 0
-collision_mask = 32
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="LittleGuy/CollectDirtArea"]
-shape = SubResource( 7 )
-disabled = true
-
-[node name="AnimationPlayer" type="AnimationPlayer" parent="LittleGuy"]
-anims/Run = SubResource( 9 )
-
-[node name="VisibilityNotifier2D" type="VisibilityNotifier2D" parent="LittleGuy"]
-position = Vector2( 3, -132 )
+[node name="MainMenuLittleGuy" parent="." instance=ExtResource( 6 )]
+position = Vector2( -7, 128 )
 
 [connection signal="pressed" from="MenuContainer/ButtonContainer/Play" to="." method="_on_Play_pressed"]
 [connection signal="pressed" from="MenuContainer/ButtonContainer/Options" to="." method="_on_Options_pressed"]
 [connection signal="pressed" from="MenuContainer/ButtonContainer/Quit" to="." method="_on_Quit_pressed"]
 [connection signal="timeout" from="DirtStopTimer" to="." method="_on_DirtStopTimer_timeout"]
-[connection signal="body_entered" from="LittleGuy/TriggerArea" to="." method="_on_TriggerArea_body_entered"]
-[connection signal="body_entered" from="LittleGuy/CollectDirtArea" to="." method="_on_CollectDirtArea_body_entered"]
-[connection signal="screen_exited" from="LittleGuy/VisibilityNotifier2D" to="." method="_on_VisibilityNotifier2D_screen_exited"]
+[connection signal="stopped" from="MainMenuLittleGuy" to="." method="_on_MainMenuLittleGuy_stopped"]
