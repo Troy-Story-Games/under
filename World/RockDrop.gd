@@ -1,7 +1,7 @@
 extends KinematicBody2D
 class_name RockDrop
 
-export(int) var GRAVITY = 150
+export(int) var GRAVITY = 300
 export(int) var MAX_FALL_SPEED = 150
 export(int) var EMBED_MAX = 8
 export(int) var EMBED_MIN = 2
@@ -12,6 +12,7 @@ var done_falling := false
 var fix_pos := true
 var embed := -1
 var stop_pos = 0
+var warning_arrow: Sprite = null
 
 onready var hitboxCollider = $Hitbox/Collider
 
@@ -37,6 +38,8 @@ func _physics_process(delta: float) -> void:
     if global_position.y >= stop_pos and embed == -1:
         embed = Utils.rand_int_incl(EMBED_MIN, EMBED_MAX)
     elif embed == 0:
+        if warning_arrow and is_instance_valid(warning_arrow):
+            warning_arrow.queue_free()
         done_falling = true
         hitboxCollider.disabled = true
 
@@ -52,6 +55,6 @@ func _on_Digger_body_entered(body: Node) -> void:
     if embed != 0:
         if body is Block or body is Rock:
             # warning-ignore:unsafe_method_access
-            body.dig()
+            body.call_deferred("dig")
         elif not body == self:
             body.queue_free()

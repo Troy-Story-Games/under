@@ -6,6 +6,7 @@ const RockScene = preload("res://World/Rock.tscn")
 const PlayerScene = preload("res://Player/Player.tscn")
 const PlayerDeathEffectScene = preload("res://Effects/PlayerDeathEffect.tscn")
 const RockDropScene = preload("res://World/RockDrop.tscn")
+const WarningArrowScene = preload("res://Effects/WarningArrow.tscn")
 
 enum CaveCarving {
     NOT_CARVING,
@@ -73,6 +74,7 @@ onready var rightWall = $RightWall
 onready var newRowSpawn = $NewRowSpawn
 onready var gameUI = $Camera2D/CanvasLayer/GameUI
 onready var eventCooldownTimer = $EventCooldownTimer
+onready var canvasLayer = $Camera2D/CanvasLayer
 
 var event_cooldown_time: float = 0.0
 var spawn_point: Vector2 = Vector2.ZERO
@@ -80,7 +82,8 @@ var player: Player = null
 var playerStats: PlayerStats = Utils.get_player_stats()
 var mainInstances: MainInstances = Utils.get_main_instances()
 var zero_depth: float = 0.0
-var current_depth: float = 0.0
+var current_depth_blocks: float = 0.0
+var current_depth_pixels: float = 0.0
 var current_depth_meters: float = 0.0
 var cave_depth: float = 0.0
 var cave_carve_pos = Vector2.ZERO
@@ -99,9 +102,9 @@ func _ready():
     playerStats.connect("player_dirt_changed", self, "_on_PlayerStats_dirt_changed")
 
     gameUI.set_dirt(0)
-    spawn_point = Vector2((Utils.NUM_COLS * Utils.BLOCK_SIZE) / 2.0, newRowSpawn.position.y - Utils.BLOCK_SIZE * 2)
-    left_x_pos = newRowSpawn.position.x
-    zero_depth = newRowSpawn.position.y
+    spawn_point = Vector2((Utils.NUM_COLS * Utils.BLOCK_SIZE) / 2.0, newRowSpawn.global_position.y - Utils.BLOCK_SIZE * 2)
+    left_x_pos = newRowSpawn.global_position.x
+    zero_depth = newRowSpawn.global_position.y
     cave_depth = zero_depth + (CAVE_DEPTH * Utils.BLOCK_SIZE)
     event_cooldown_time = EVENT_COOLDOWN_MAX
     generate_more_blocks()
@@ -113,22 +116,23 @@ func _process(_delta: float) -> void:
     if not player or not is_instance_valid(player):
         return
 
-    var y_pos : float = player.position.y
-    leftWall.position.y = y_pos
-    rightWall.position.y = y_pos
+    var y_pos : float = player.global_position.y
+    leftWall.global_position.y = y_pos
+    rightWall.global_position.y = y_pos
 
     if abs(newRowSpawn.global_position.y - player.global_position.y) < REGENERATE_BLOCK_THRESHOLD:
         generate_more_blocks(true)
 
-    current_depth = (player.position.y - zero_depth) / float(Utils.BLOCK_SIZE)
-    current_depth_meters = current_depth * Utils.BLOCK_SIZE_IN_METERS
+    current_depth_pixels = (player.global_position.y - zero_depth)
+    current_depth_blocks = current_depth_pixels / float(Utils.BLOCK_SIZE)
+    current_depth_meters = current_depth_blocks * Utils.BLOCK_SIZE_IN_METERS
     gameUI.set_depth(ceil(current_depth_meters))
 
-    if current_depth >= EVENT_START_DEPTH and eventCooldownTimer.time_left == 0:
+    if current_depth_blocks >= EVENT_START_DEPTH and eventCooldownTimer.time_left == 0:
         eventCooldownTimer.start(event_cooldown_time)
 
-    if current_depth <= EVENT_MAX_DIFFICULTY_DEPTH:
-        var depth_difficulty_factor: float = current_depth / float(EVENT_MAX_DIFFICULTY_DEPTH)
+    if current_depth_blocks <= EVENT_MAX_DIFFICULTY_DEPTH:
+        var depth_difficulty_factor: float = current_depth_blocks / float(EVENT_MAX_DIFFICULTY_DEPTH)
         var new_cooldown_time = (EVENT_COOLDOWN_MAX - EVENT_COOLDOWN_MIN) * (1 - depth_difficulty_factor)
         event_cooldown_time = clamp(new_cooldown_time, EVENT_COOLDOWN_MIN, EVENT_COOLDOWN_MAX)
 
@@ -138,7 +142,7 @@ func _on_PlayerStats_dirt_changed(value: int):
 
 
 func _on_PlayerStats_player_died():
-    spawn_point = player.position
+    spawn_point = player.global_position
 
     # Pause the game for a second
     get_tree().paused = true
@@ -174,7 +178,7 @@ func respawn_player():
 
 func should_place_block(pos: Vector2) -> bool:
     # Wait to make caves until we're initially deep enough
-    if newRowSpawn.position.y < cave_depth:
+    if newRowSpawn.global_position.y < cave_depth:
         return true
 
     match cave_carve_state:
@@ -239,10 +243,10 @@ func should_place_block(pos: Vector2) -> bool:
 
 func generate_more_blocks(slow: bool = false):
     # Get position
-    var pos: Vector2 = newRowSpawn.position
+    var pos: Vector2 = newRowSpawn.global_position
 
     # Update the row spawn position
-    newRowSpawn.position.y += (ROW_BUFFER * Utils.BLOCK_SIZE)
+    newRowSpawn.global_position.y += (ROW_BUFFER * Utils.BLOCK_SIZE)
 
     cave_carve_state = CaveCarving.NEW_CAVE
 
@@ -291,9 +295,13 @@ func spawn_event():
             print("ROCK DROP")
             var col = Utils.rand_int_incl(0, Utils.NUM_COLS - 1)
             var col_x = left_x_pos + (col * Utils.BLOCK_SIZE) + (Utils.BLOCK_SIZE / 2.0)
-            var y_pos = current_depth - (Utils.BLOCK_SIZE * ROW_BUFFER)
-            # warning-ignore:return_value_discarded
-            Utils.instance_scene_on_main(RockDropScene, Vector2(col_x, y_pos))
+            var y_pos = player.global_position.y - (Utils.BLOCK_SIZE * ROW_BUFFER)
+            var rock_drop: RockDrop = Utils.instance_scene_on_main(RockDropScene, Vector2(col_x, y_pos))
+            var warning_arrow = WarningArrowScene.instance()
+            canvasLayer.add_child(warning_arrow)
+            warning_arrow.global_position.y = Utils.BLOCK_SIZE
+            warning_arrow.global_position.x = col_x
+            rock_drop.warning_arrow = warning_arrow
         GameEvent.TRIP_WIRE:
             print("TRIP WIRE")
 

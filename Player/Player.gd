@@ -6,8 +6,8 @@ export(int) var MAX_SPEED = 32
 export(float) var FRICTION = 0.65
 export(int) var GRAVITY = 200
 export(int) var JUMP_FORCE = 85
-export(int) var WALL_SLIDE_SPEED = 32
-export(int) var MAX_WALL_SLIDE_SPEED = 85
+export(int) var WALL_SLIDE_SPEED = 15
+export(int) var MAX_WALL_SLIDE_SPEED = 30
 export(int) var CLOSE_CEILING_DISTANCE = 4
 export(float) var DOUBLE_PRESS_TIMEOUT = 0.5
 
