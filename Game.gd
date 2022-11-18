@@ -280,6 +280,13 @@ func spawn_hazard(pos: Vector2):
 
 
 func spawn_event():
+    # If the player dies at or around the same moment we try to spawn
+    # an event, there's a chance we try to access an attribute from the player
+    # but it would be an invalid instance until the player respawns. So we spin
+    # here until we have the player back.
+    while player == null or not is_instance_valid(player):
+        yield(get_tree(), "idle_frame")
+
     var event_types = GameEvent.values()
     event_types.shuffle()
     var event = event_types[0]
@@ -295,13 +302,15 @@ func spawn_event():
             print("ROCK DROP")
             var col = Utils.rand_int_incl(0, Utils.NUM_COLS - 1)
             var col_x = left_x_pos + (col * Utils.BLOCK_SIZE) + (Utils.BLOCK_SIZE / 2.0)
-            var y_pos = player.global_position.y - (Utils.BLOCK_SIZE * ROW_BUFFER)
-            var rock_drop: RockDrop = Utils.instance_scene_on_main(RockDropScene, Vector2(col_x, y_pos))
+            var y_pos = player.global_position.y - (Utils.BLOCK_SIZE * CAVE_DEPTH)
+
+            # warning-ignore:return_value_discarded
+            Utils.instance_scene_on_main(RockDropScene, Vector2(col_x, y_pos))
+
             var warning_arrow = WarningArrowScene.instance()
             canvasLayer.add_child(warning_arrow)
             warning_arrow.global_position.y = Utils.BLOCK_SIZE
             warning_arrow.global_position.x = col_x
-            rock_drop.warning_arrow = warning_arrow
         GameEvent.TRIP_WIRE:
             print("TRIP WIRE")
 

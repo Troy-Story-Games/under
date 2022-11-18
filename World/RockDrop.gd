@@ -12,7 +12,6 @@ var done_falling := false
 var fix_pos := true
 var embed := -1
 var stop_pos = 0
-var warning_arrow: Sprite = null
 
 onready var hitboxCollider = $Hitbox/Collider
 
@@ -38,10 +37,13 @@ func _physics_process(delta: float) -> void:
     if global_position.y >= stop_pos and embed == -1:
         embed = Utils.rand_int_incl(EMBED_MIN, EMBED_MAX)
     elif embed == 0:
-        if warning_arrow and is_instance_valid(warning_arrow):
-            warning_arrow.queue_free()
         done_falling = true
         hitboxCollider.disabled = true
+    elif embed > 0 and global_position.y > (stop_pos * 2):
+        # It's possible for the rock to end up out of bounds
+        # if it falls into a cave and then passed the point
+        # where we've generate more level.
+        queue_free()
 
 
 func apply_gravity(delta):
