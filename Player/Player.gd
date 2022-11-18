@@ -166,7 +166,7 @@ func jump_check():
 
 
 func jump(force):
-    SoundFx.play("jump", 1, -25)
+    SoundFx.play("jump", 1, -15)
     motion.y = -force
 
 

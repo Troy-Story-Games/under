@@ -20,6 +20,11 @@ _global_script_classes=[ {
 "path": "res://Effects/BlockParticle.gd"
 }, {
 "base": "KinematicBody2D",
+"class": "BombBlock",
+"language": "GDScript",
+"path": "res://World/BombBlock.gd"
+}, {
+"base": "KinematicBody2D",
 "class": "CollectibleItem",
 "language": "GDScript",
 "path": "res://Pickup/CollectibleItem.gd"
@@ -87,6 +92,7 @@ _global_script_classes=[ {
 _global_script_class_icons={
 "Block": "",
 "BlockParticle": "",
+"BombBlock": "",
 "CollectibleItem": "",
 "DirtSpawner": "",
 "GameOverMenu": "",

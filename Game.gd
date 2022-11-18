@@ -3,6 +3,7 @@ class_name MainGame
 
 const BlockScene = preload("res://World/Block.tscn")
 const RockScene = preload("res://World/Rock.tscn")
+const BombBlockScene = preload("res://World/BombBlock.tscn")
 const PlayerScene = preload("res://Player/Player.tscn")
 const PlayerDeathEffectScene = preload("res://Effects/PlayerDeathEffect.tscn")
 const RockDropScene = preload("res://World/RockDrop.tscn")
@@ -146,6 +147,7 @@ func _on_PlayerStats_player_died():
 
     # Pause the game for a second
     get_tree().paused = true
+    SoundFx.play("death_sound", 1, -15)
     yield(get_tree().create_timer(1.0), "timeout")
 
     # warning-ignore:unsafe_property_access
@@ -276,7 +278,8 @@ func spawn_hazard(pos: Vector2):
             # warning-ignore:return_value_discarded
             Utils.instance_scene_on_main(RockScene, pos)
         GameHazard.BOMB:
-            pass
+            # warning-ignore:return_value_discarded
+            Utils.instance_scene_on_main(BombBlockScene, pos)
 
 
 func spawn_event():
@@ -294,6 +297,8 @@ func spawn_event():
     # TODO: Remove this line - it forces all events to be rock drop
     event = GameEvent.ROCK_DROP
     # TODO: Remove the above line - it forces all events to be rock drop
+
+    SoundFx.play("event_warning", 1, -15)
 
     match event:
         GameEvent.FLOOD:

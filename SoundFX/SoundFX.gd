@@ -22,7 +22,7 @@ func load_sound_fx():
     var check = dir.get_next()
     while check != "":
         var full_path = sounds_path + check
-        if check.ends_with(".ogg"):
+        if check.ends_with(".ogg") or check.ends_with(".wav"):
             var fx_name: String = check.split(".", false, 1)[0]
             print("Found Sound effect: ", check)
             print("Access by name: ", fx_name)
