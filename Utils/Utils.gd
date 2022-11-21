@@ -2,6 +2,7 @@ extends Node
 
 const NUM_COLS = 12
 const BLOCK_SIZE = 8
+const HALF_BLOCK_SIZE = 4
 const BLOCK_SIZE_IN_METERS = 2
 
 

@@ -57,6 +57,9 @@ export(float) var H_TUNNEL_DOWN_FACTOR = 0.45
 # Chance that a hazard is generated.
 export(float) var HAZARD_CHANCE = 0.05
 
+# The depth (in blocks) at which GameHazards will start
+export(int) var HAZARD_START_DEPTH = 10
+
 # The depth (in blocks) at which GameEvents will start
 export(int) var EVENT_START_DEPTH = 24
 
@@ -113,6 +116,14 @@ func _ready():
     respawn_player()
 
 
+func pos_to_pixel_depth(pos: Vector2) -> float:
+    return pos.y - zero_depth
+
+
+func pos_to_block_depth(pos: Vector2) -> float:
+    return pos_to_pixel_depth(pos) / float(Utils.BLOCK_SIZE)
+
+
 func _process(_delta: float) -> void:
     if not player or not is_instance_valid(player):
         return
@@ -124,8 +135,8 @@ func _process(_delta: float) -> void:
     if abs(newRowSpawn.global_position.y - player.global_position.y) < REGENERATE_BLOCK_THRESHOLD:
         generate_more_blocks(true)
 
-    current_depth_pixels = (player.global_position.y - zero_depth)
-    current_depth_blocks = current_depth_pixels / float(Utils.BLOCK_SIZE)
+    current_depth_pixels = pos_to_pixel_depth(player.global_position)
+    current_depth_blocks = pos_to_block_depth(player.global_position)
     current_depth_meters = current_depth_blocks * Utils.BLOCK_SIZE_IN_METERS
     gameUI.set_depth(ceil(current_depth_meters))
 
@@ -254,8 +265,8 @@ func generate_more_blocks(slow: bool = false):
 
     for row in range(ROW_BUFFER):
         for col in range(Utils.NUM_COLS):
-            var x : float = pos.x + (col * Utils.BLOCK_SIZE) + (Utils.BLOCK_SIZE / 2.0)
-            var y : float = pos.y + (row * Utils.BLOCK_SIZE) + (Utils.BLOCK_SIZE / 2.0)
+            var x : float = pos.x + (col * Utils.BLOCK_SIZE) + Utils.HALF_BLOCK_SIZE
+            var y : float = pos.y + (row * Utils.BLOCK_SIZE) + Utils.HALF_BLOCK_SIZE
             var new_pos: Vector2 = Vector2(x, y)
             if should_place_block(new_pos):
                 place_world_block(new_pos)
@@ -306,7 +317,7 @@ func spawn_event():
         GameEvent.ROCK_DROP:
             print("ROCK DROP")
             var col = Utils.rand_int_incl(0, Utils.NUM_COLS - 1)
-            var col_x = left_x_pos + (col * Utils.BLOCK_SIZE) + (Utils.BLOCK_SIZE / 2.0)
+            var col_x = left_x_pos + (col * Utils.BLOCK_SIZE) + Utils.HALF_BLOCK_SIZE
             var y_pos = player.global_position.y - (Utils.BLOCK_SIZE * CAVE_DEPTH)
 
             # warning-ignore:return_value_discarded
@@ -321,7 +332,7 @@ func spawn_event():
 
 
 func place_world_block(pos: Vector2) -> void:
-    if randf() < HAZARD_CHANCE:
+    if randf() < HAZARD_CHANCE and pos_to_block_depth(pos) > HAZARD_START_DEPTH:
         spawn_hazard(pos)
     else:
         # warning-ignore:return_value_discarded

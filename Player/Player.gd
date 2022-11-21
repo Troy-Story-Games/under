@@ -354,10 +354,14 @@ func dig_check():
             state = DIG
 
 
-func _on_Hurtbox_take_damage(damage : int, _area : Area2D):
+func take_damage(damage: int) -> void:
     # TODO: Consider playing a sound effect
     playerStats.health -= damage
     # TODO: Consider playing a flash or damage animation
+
+
+func _on_Hurtbox_take_damage(damage : int, _area : Area2D):
+    take_damage(damage)
 
 
 func _on_ItemCollector_body_entered(body):

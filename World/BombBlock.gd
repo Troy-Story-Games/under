@@ -1,16 +1,10 @@
 extends KinematicBody2D
 class_name BombBlock
 
-enum ExplodeShape {
-    CIRCLE,
-    PLUS,
-    DIAG
-}
-
 # The explode radius in number of blocks
 export(int) var EXPLODE_RADIUS = 2
 export(float) var FUSE_TIME = 1.25
-export(ExplodeShape) var EXPLODE_SHAPE = ExplodeShape.PLUS
+export(int) var DAMAGE = 1
 
 onready var fuseTimer = $FuseTimer
 onready var explodeArea = $ExplodeArea
@@ -18,37 +12,51 @@ onready var explodeAreaCollider = $ExplodeArea/CollisionShape2D
 
 
 func _ready():
+    # Setup the explode area size based on configs
     var shape: RectangleShape2D = explodeAreaCollider.shape
     shape.extents.x = 12 + ((EXPLODE_RADIUS - 1) * Utils.BLOCK_SIZE)
     shape.extents.y = 12 + ((EXPLODE_RADIUS - 1) * Utils.BLOCK_SIZE)
 
 
+func in_x_range(pos: Vector2):
+    var left_x = global_position.x - Utils.HALF_BLOCK_SIZE
+    var right_x = global_position.x + Utils.HALF_BLOCK_SIZE
+    if pos.x > left_x and pos.x < right_x:
+        return true
+    return false
+
+
+func in_y_range(pos: Vector2):
+    var top_y = global_position.y - Utils.HALF_BLOCK_SIZE
+    var bottom_y = global_position.y + Utils.HALF_BLOCK_SIZE
+    if pos.y < bottom_y and pos.y > top_y:
+        return true
+    return false
+
+
 func explode():
     var bodies: Array = explodeArea.get_overlapping_bodies()
     for body in bodies:
-        if not body.is_in_group("WorldBlocks"):
+        if not body.is_in_group("Player") and not body.is_in_group("WorldBlocks"):
             continue
         if body == self:
             continue
 
         var delete = false
-        match EXPLODE_SHAPE:
-            ExplodeShape.CIRCLE:
-                delete = true
-            ExplodeShape.PLUS:
-                if body.global_position.x == self.global_position.x:
-                    delete = true
-                elif body.global_position.y == self.global_position.y:
-                    delete = true
-            ExplodeShape.DIAG:
-                if body.global_position.x != self.global_position.x and body.global_position.y != self.global_position.y:
-                    delete = true
+        if in_x_range(body.global_position):
+            delete = true
+        elif in_y_range(body.global_position):
+            delete = true
 
         if not delete:
             continue
 
         if body.has_method("trigger"):
             body.trigger()
+        elif body.has_method("dig"):
+            body.dig()
+        elif body.has_method("take_damage"):
+            body.take_damage(DAMAGE)
         else:
             body.queue_free()
 
