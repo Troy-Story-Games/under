@@ -10,6 +10,9 @@ export(int) var WALL_SLIDE_SPEED = 15
 export(int) var MAX_WALL_SLIDE_SPEED = 30
 export(int) var CLOSE_CEILING_DISTANCE = 4
 export(float) var DOUBLE_PRESS_TIMEOUT = 0.5
+export(int) var GROUND_POUND_MAX_SPEED = 250
+export(int) var GROUND_POUND_ACCELERATION = 600
+export(int) var GROUND_POUND_MAX_EMBED = 8
 
 enum {
     MOVE,
@@ -34,7 +37,10 @@ var just_jumped = false
 var double_jump = true
 var just_spawned = true
 var playerStats : PlayerStats = Utils.get_player_stats()
-var double_press_button = null
+var embed = -1
+var ground_pound_start_pos = 0
+var double_press_horizontal = null
+var double_press_down = null
 
 onready var sprite = $Sprite
 onready var cameraFollow = $CameraFollow
@@ -42,10 +48,12 @@ onready var footstepPlayer = $FootstepAudioStreamPlayer2D
 onready var coyoteJumpTimer = $CoyoteJumpTimer
 onready var animationPlayer = $AnimationPlayer
 onready var safeSpawnArea = $SafeSpawnArea
+onready var groundPoundDiggerCollider = $GroundPoundDigger/CollisionShape2D
 
 
 func _ready():
     just_spawned = true
+    groundPoundDiggerCollider.disabled = true
 
 
 func _physics_process(delta):
@@ -96,8 +104,19 @@ func _physics_process(delta):
                 state = MOVE
 
         GROUND_POUND:
-            print("GROUND POUND!!!")
-            state = MOVE
+            if embed == -1 and ground_pound_start_pos == 0:
+                groundPoundDiggerCollider.disabled = false
+                ground_pound_start_pos = global_position.y
+
+            if embed == 0:
+                embed = -1
+                groundPoundDiggerCollider.disabled = true
+                ground_pound_start_pos = 0
+                state = MOVE
+            else:
+                motion.y += GROUND_POUND_ACCELERATION * delta
+                motion.y = min(motion.y, GROUND_POUND_MAX_SPEED)
+                position.y += motion.y * delta
 
     if just_spawned:
         # If we just spawned, set to false, then make a safe spawn spot
@@ -165,6 +184,11 @@ func jump_check():
             double_jump = false
 
 
+func ground_pound_check():
+    if not on_floor():
+        state = GROUND_POUND
+
+
 func jump(force):
     SoundFx.play("jump", 1, -15)
     motion.y = -force
@@ -224,39 +248,29 @@ func double_press_dig():
 
 
 func double_press_check():
-    if Input.is_action_just_pressed("ui_right") and double_press_button == null:
-        double_press_button = "ui_right"
+    if Input.is_action_just_pressed("ui_right") and double_press_horizontal == null:
+        double_press_horizontal = "ui_right"
         yield(get_tree().create_timer(DOUBLE_PRESS_TIMEOUT), "timeout")
-        double_press_button = null
-    if Input.is_action_just_pressed("ui_right") and double_press_button == "ui_right":
-        print("DOUBLE PRESS RIGHT!")
+        double_press_horizontal = null
+    if Input.is_action_just_pressed("ui_right") and double_press_horizontal == "ui_right":
         double_press_dig()
-        double_press_button = null
+        double_press_horizontal = null
 
-    if Input.is_action_just_pressed("ui_left") and double_press_button == null:
-        double_press_button = "ui_left"
+    if Input.is_action_just_pressed("ui_left") and double_press_horizontal == null:
+        double_press_horizontal = "ui_left"
         yield(get_tree().create_timer(DOUBLE_PRESS_TIMEOUT), "timeout")
-        double_press_button = null
-    if Input.is_action_just_pressed("ui_left") and double_press_button == "ui_left":
-        print("DOUBLE PRESS LEFT!")
+        double_press_horizontal = null
+    if Input.is_action_just_pressed("ui_left") and double_press_horizontal == "ui_left":
         double_press_dig()
-        double_press_button = null
+        double_press_horizontal = null
 
-    if (Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump")) and double_press_button == null:
-        double_press_button = "ui_up"
+    if Input.is_action_just_pressed("ui_down") and double_press_down == null:
+        double_press_down = "ui_down"
         yield(get_tree().create_timer(DOUBLE_PRESS_TIMEOUT), "timeout")
-        double_press_button = null
-    if (Input.is_action_just_pressed("ui_up") or Input.is_action_just_pressed("jump")) and double_press_button == "ui_up":
-        print("DOUBLE PRESS UP!")
-        double_press_button = null
-
-    if Input.is_action_just_pressed("ui_down") and double_press_button == null:
-        double_press_button = "ui_down"
-        yield(get_tree().create_timer(DOUBLE_PRESS_TIMEOUT), "timeout")
-        double_press_button = null
-    if Input.is_action_just_pressed("ui_down") and double_press_button == "ui_down":
-        print("DOUBLE PRESS DOWN!")
-        double_press_button = null
+        double_press_down = null
+    if Input.is_action_just_pressed("ui_down") and double_press_down == "ui_down":
+        ground_pound_check()
+        double_press_down = null
 
 
 func move():
@@ -284,6 +298,7 @@ func move():
 
         # On landing we get double jump back
         double_jump = true
+
 
     # Just left the ground
     if was_on_floor and not on_floor() and not just_jumped:
@@ -369,3 +384,18 @@ func _on_ItemCollector_body_entered(body):
         if body.IS_DIRT:
             playerStats.dirt += 1
     body.queue_free()
+
+
+func _on_GroundPoundDigger_body_entered(body: Node) -> void:
+    if embed == -1:
+        embed = clamp(int(ceil((global_position.y - ground_pound_start_pos) / float(Utils.BLOCK_SIZE))), 1, GROUND_POUND_MAX_EMBED)
+    if embed > 0:
+        embed -= 1
+
+    if embed != 0:
+        if body.has_method("dig"):
+            body.call_deferred("dig")
+        elif body.has_method("explode"):
+            body.call_deferred("explode")
+        elif not body == self:
+            body.queue_free()

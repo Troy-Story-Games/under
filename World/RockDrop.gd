@@ -56,7 +56,7 @@ func _on_Digger_body_entered(body: Node) -> void:
     if embed > 0:
         embed -= 1
     if embed != 0:
-        if body is Block or body is Rock:
+        if body.has_method("dig"):
             # warning-ignore:unsafe_method_access
             body.call_deferred("dig")
         elif not body == self:

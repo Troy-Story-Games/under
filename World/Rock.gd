@@ -13,6 +13,7 @@ var restore_pos : Vector2 = Vector2.ZERO
 var floor_collision : KinematicCollision2D = null
 var floor_collider: Node2D = null
 var player: Player = null
+var on_screen: = false
 
 onready var sprite = $Sprite
 onready var collider = $CollisionShape2D
@@ -29,7 +30,8 @@ func _ready() -> void:
 
 func dig() -> void:
     # warning-ignore:return_value_discarded
-    Utils.instance_scene_on_main(BlockDestroyEffect, global_position)
+    if on_screen:
+        Utils.instance_scene_on_main(BlockDestroyEffect, global_position)
     SoundFx.play("digging", 1, -15)
     queue_free()
 
@@ -90,12 +92,14 @@ func apply_gravity(delta):
 func _on_VisibilityNotifier2D_screen_exited() -> void:
     collider.disabled = true
     visible = false
+    on_screen = false
     set_physics_process(false)
 
 
 func _on_VisibilityNotifier2D_screen_entered() -> void:
     collider.disabled = false
     visible = true
+    on_screen = true
     set_physics_process(true)
 
 

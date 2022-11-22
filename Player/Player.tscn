@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=2]
+[gd_scene load_steps=12 format=2]
 
 [ext_resource path="res://Player/Player.gd" type="Script" id=1]
 [ext_resource path="res://Overlap/Hurtbox.tscn" type="PackedScene" id=2]
@@ -51,6 +51,9 @@ radius = 6.0
 [sub_resource type="CircleShape2D" id=9]
 radius = 6.0
 
+[sub_resource type="RectangleShape2D" id=10]
+extents = Vector2( 1, 2 )
+
 [node name="Player" type="KinematicBody2D" groups=["Player"]]
 collision_layer = 2
 collision_mask = 33
@@ -100,7 +103,15 @@ stream = ExtResource( 4 )
 volume_db = -20.0
 pitch_scale = 0.8
 
+[node name="GroundPoundDigger" type="Area2D" parent="."]
+collision_layer = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="GroundPoundDigger"]
+position = Vector2( 0, 3 )
+shape = SubResource( 10 )
+
 [connection signal="take_damage" from="Hurtbox" to="." method="_on_Hurtbox_take_damage"]
 [connection signal="body_entered" from="ItemCollector" to="." method="_on_ItemCollector_body_entered"]
+[connection signal="body_entered" from="GroundPoundDigger" to="." method="_on_GroundPoundDigger_body_entered"]
 
 [editable path="Hurtbox"]
