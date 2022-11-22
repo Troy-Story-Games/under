@@ -158,17 +158,24 @@ func _on_PlayerStats_player_died():
 
     # Pause the game for a second
     get_tree().paused = true
-    SoundFx.play("death_sound", 1, -15)
+    Events.emit_signal("add_screenshake", 0.075, 0.5)
+    SoundFx.play("player_hit", 1, -10)
     yield(get_tree().create_timer(1.0), "timeout")
 
     # warning-ignore:unsafe_property_access
     mainInstances.player = null
     player.queue_free()
+
+    Engine.time_scale = 0.5
     var death_effect: CPUParticles2D = Utils.instance_scene_on_main(PlayerDeathEffectScene, spawn_point)
     death_effect.emitting = true
 
     get_tree().paused = false
-    yield(get_tree().create_timer(1.5), "timeout")
+    Engine.time_scale = 0.30
+    Events.emit_signal("add_screenshake", 0.075, 0.5)
+    SoundFx.play("death_sound", 0.65, -20)
+    yield(get_tree().create_timer(0.75), "timeout")
+    Engine.time_scale = 1
 
     playerStats.lives -= 1
     if playerStats.lives > 0:

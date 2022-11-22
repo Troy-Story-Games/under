@@ -129,6 +129,7 @@ SaveAndLoad="*res://Utils/SaveAndLoad.gd"
 Utils="*res://Utils/Utils.gd"
 Music="*res://Music/Music.tscn"
 SoundFx="*res://SoundFX/SoundFX.tscn"
+Events="*res://Utils/Events.gd"
 
 [debug]
 

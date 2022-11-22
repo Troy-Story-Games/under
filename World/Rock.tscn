@@ -8,7 +8,7 @@
 extents = Vector2( 3.76, 4 )
 
 [sub_resource type="RectangleShape2D" id=3]
-extents = Vector2( 4, 1.5 )
+extents = Vector2( 4, 1.16229 )
 
 [sub_resource type="RectangleShape2D" id=4]
 extents = Vector2( 3, 24 )
@@ -34,7 +34,7 @@ one_shot = true
 collision_mask = 4
 
 [node name="Collider" parent="Hitbox" index="0"]
-position = Vector2( 0, 3.5 )
+position = Vector2( 0, 3.16229 )
 shape = SubResource( 3 )
 
 [node name="FallZone" type="Area2D" parent="."]

@@ -49,6 +49,7 @@ onready var coyoteJumpTimer = $CoyoteJumpTimer
 onready var animationPlayer = $AnimationPlayer
 onready var safeSpawnArea = $SafeSpawnArea
 onready var groundPoundDiggerCollider = $GroundPoundDigger/CollisionShape2D
+onready var fallTimer = $FallTimer
 
 
 func _ready():
@@ -190,7 +191,7 @@ func ground_pound_check():
 
 
 func jump(force):
-    SoundFx.play("jump", 1, -15)
+    SoundFx.play("jump", 1, -8)
     motion.y = -force
 
 
@@ -292,6 +293,10 @@ func move():
 
     # Happens on landing
     if was_in_air and on_floor():
+        if fallTimer.time_left == 0:
+            SoundFx.play("playerland", 1, -20)
+        fallTimer.stop()
+
         # Fix for move_and_slide_with_snap causing us to
         # lose momentum when landing on a slope
         motion.x = last_motion.x
@@ -299,11 +304,11 @@ func move():
         # On landing we get double jump back
         double_jump = true
 
-
     # Just left the ground
     if was_on_floor and not on_floor() and not just_jumped:
         # Fix for little hop if you fall off a ledge after
         # climbing a slope
+        fallTimer.start()
         motion.y = 0
         position.y = last_position.y
         coyoteJumpTimer.start()

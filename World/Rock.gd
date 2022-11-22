@@ -42,6 +42,7 @@ func _physics_process(delta: float) -> void:
         floor_collider = floor_collision.collider
         if not floor_collider.is_in_group("WorldBlocks"):
             floor_collision = null
+            floor_collider = null
 
     if falling and not floor_collision:
         apply_gravity(delta)

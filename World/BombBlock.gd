@@ -6,9 +6,11 @@ export(int) var EXPLODE_RADIUS = 2
 export(float) var FUSE_TIME = 1.25
 export(int) var DAMAGE = 1
 
+onready var sprite = $Sprite
 onready var fuseTimer = $FuseTimer
 onready var explodeArea = $ExplodeArea
 onready var explodeAreaCollider = $ExplodeArea/CollisionShape2D
+onready var blinkAnimationPlayer = $BlinkAnimationPlayer
 
 
 func _ready():
@@ -16,6 +18,9 @@ func _ready():
     var shape: RectangleShape2D = explodeAreaCollider.shape
     shape.extents.x = 12 + ((EXPLODE_RADIUS - 1) * Utils.BLOCK_SIZE)
     shape.extents.y = 12 + ((EXPLODE_RADIUS - 1) * Utils.BLOCK_SIZE)
+    var mat: ShaderMaterial = sprite.material
+    var shader: Shader = mat.shader
+    shader.set("shader_param/active", false)
 
 
 func in_x_range(pos: Vector2):
@@ -35,6 +40,7 @@ func in_y_range(pos: Vector2):
 
 
 func explode():
+    SoundFx.play("bomb_explode", 0.8, -15)
     var bodies: Array = explodeArea.get_overlapping_bodies()
     for body in bodies:
         if not body.is_in_group("Player") and not body.is_in_group("WorldBlocks"):
@@ -64,6 +70,8 @@ func explode():
 
 
 func trigger():
+    SoundFx.play("bomb_fuse", 0.25, -20)
+    blinkAnimationPlayer.play("BlinkAnimation")
     if fuseTimer.time_left == 0:
         fuseTimer.start(FUSE_TIME)
 
