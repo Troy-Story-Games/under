@@ -49,6 +49,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Menus/GameUI.gd"
 }, {
+"base": "Control",
+"class": "HighScoreMenu",
+"language": "GDScript",
+"path": "res://Menus/HighScoreMenu.gd"
+}, {
 "base": "Area2D",
 "class": "Hitbox",
 "language": "GDScript",
@@ -103,6 +108,7 @@ _global_script_class_icons={
 "DirtSpawner": "",
 "GameOverMenu": "",
 "GameUI": "",
+"HighScoreMenu": "",
 "Hitbox": "",
 "Hurtbox": "",
 "MainGame": "",

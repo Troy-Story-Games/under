@@ -1,27 +1,32 @@
 extends Resource
 class_name PlayerStats
 
-# Basic PlayerStats resource, modify as needed.
-# Retrieve a shared instance with Utils.get_player_stats()
-# from anywhere this is needed.
+# New life every 5000 dirt
+const NEW_LIFE_DIRT = 5000
 
 signal game_over()
 signal player_died()
 signal player_health_changed(value)
 signal player_dirt_changed(value)
+signal lives_changed(value)
 
 var lives: int = 3 setget set_lives
 var dirt: int = 0 setget set_dirt
 var health : int = 1 setget set_health
+var next_life: int = NEW_LIFE_DIRT
 
 
 func set_dirt(value: int):
     dirt = value
+    if dirt >= next_life:
+        self.lives += 1
+        next_life += NEW_LIFE_DIRT
     emit_signal("player_dirt_changed", dirt)
 
 
 func set_lives(value: int):
     lives = int(max(value, 0))
+    emit_signal("lives_changed", value)
     if lives == 0:
         emit_signal("game_over")
 
