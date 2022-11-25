@@ -117,6 +117,8 @@ func _ready():
     playerStats.connect("player_dirt_changed", self, "_on_PlayerStats_dirt_changed")
     # warning-ignore:return_value_discarded
     playerStats.connect("lives_changed", self, "_on_PlayerStats_lives_changed")
+    # warning-ignore:return_value_discarded
+    playerStats.connect("depth_changed", self, "_on_PlayerStats_depth_changed")
 
     gameUI.set_dirt(0)
     gameUI.set_lives(playerStats.lives)
@@ -166,8 +168,7 @@ func _process(_delta: float) -> void:
     current_depth_pixels = pos_to_pixel_depth(player.global_position)
     current_depth_blocks = pos_to_block_depth(player.global_position)
     current_depth_meters = current_depth_blocks * Utils.BLOCK_SIZE_IN_METERS
-    gameUI.set_depth(ceil(current_depth_meters))
-
+    playerStats.set_depth(int(ceil(current_depth_meters)))
     if current_depth_blocks >= EVENT_START_DEPTH and eventCooldownTimer.time_left == 0:
         eventCooldownTimer.start(event_cooldown_time)
 
@@ -225,9 +226,10 @@ func _on_PlayerStats_lives_changed(value):
     gameUI.set_lives(value)
     # TODO: Play sound, maybe particles
 
+func _on_PlayerStats_depth_changed(value):
+    gameUI.set_depth(value)
 
 func _on_PlayerStats_game_over():
-    playerStats.refill_stats()
     # warning-ignore:return_value_discarded
     get_tree().change_scene("res://Menus/GameOverMenu.tscn")
 

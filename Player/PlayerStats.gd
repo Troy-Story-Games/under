@@ -8,12 +8,19 @@ signal game_over()
 signal player_died()
 signal player_health_changed(value)
 signal player_dirt_changed(value)
+signal player_depth_changed(value)
 signal lives_changed(value)
 
 var lives: int = 3 setget set_lives
 var dirt: int = 0 setget set_dirt
 var health : int = 1 setget set_health
 var next_life: int = NEW_LIFE_DIRT
+var depth: int = 0 setget set_depth
+
+
+func set_depth(value: int):
+    depth = value
+    emit_signal("player_depth_changed")
 
 
 func set_dirt(value: int):
@@ -46,3 +53,4 @@ func refill_stats():
     self.health = 1
     self.dirt = 0
     self.lives = 3
+    self.depth = 0
