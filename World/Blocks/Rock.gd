@@ -1,7 +1,9 @@
 extends KinematicBody2D
 class_name Rock
 
-const RockDestroyEffect = preload("res://Effects/RockDestroyEffect.tscn")
+const DestroyEffectScene = preload("res://Effects/BlockEffects/DestroyEffect.tscn")
+const RockPhysicsParticleScene = preload("res://Effects/BlockEffects/ParticleTypes/RockPhysicsParticle.tscn")
+const RockPhysicsParticleSmallScene = preload("res://Effects/BlockEffects/ParticleTypes/RockPhysicsParticleSmall.tscn")
 
 export(int) var GRAVITY = 500
 export(int) var MAX_FALL_SPEED = 300
@@ -31,7 +33,8 @@ func _ready() -> void:
 func dig() -> void:
     # warning-ignore:return_value_discarded
     if on_screen:
-        Utils.instance_scene_on_main(RockDestroyEffect, global_position)
+        var effect: DestroyEffect = Utils.instance_scene_on_main(DestroyEffectScene, global_position)
+        effect.create_effect(RockPhysicsParticleScene, RockPhysicsParticleSmallScene)
     SoundFx.play("digging", 1, -15)
     queue_free()
 
@@ -40,7 +43,11 @@ func _physics_process(delta: float) -> void:
     floor_collision = move_and_collide(Vector2.DOWN, true, true, true)
     if floor_collision:
         floor_collider = floor_collision.collider
-        if not floor_collider.is_in_group("WorldBlocks"):
+        if floor_collider is Player:
+            # warning-ignore:unsafe_property_access
+            if floor_collider.hurtbox.invincible:
+                dig()
+        elif not floor_collider.is_in_group("WorldBlocks"):
             floor_collision = null
             floor_collider = null
 
@@ -70,15 +77,6 @@ func _physics_process(delta: float) -> void:
     if player and not on_floor() and fallDelayTimer.time_left == 0:
         fallDelayTimer.start(FALL_DELAY)
         restore_pos = Vector2(sprite.position.x, sprite.position.y)
-
-
-func adjust_position():
-    var x_pos = position.x
-    var y_pos = position.y
-    x_pos = floor(x_pos)
-    y_pos = floor(y_pos)
-
-    position = Vector2(x_pos, y_pos)
 
 
 func on_floor():

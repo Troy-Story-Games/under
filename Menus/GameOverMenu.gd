@@ -7,7 +7,7 @@ var input_array = []
 var input_idx = 0
 var input_done = false
 
-onready var mainMenuButton = $"%MainMenuButton"
+onready var continueButton = $"%ContinueButton"
 onready var depthLabel = $"%DepthLabel"
 onready var dirtLabel = $"%DirtLabel"
 onready var firstLetter = $"%FirstLetter"
@@ -17,8 +17,8 @@ onready var inputBlinkTimer = $InputBlinkTimer
 
 
 func _ready():
-    mainMenuButton.disabled = true
-    mainMenuButton.grab_focus()
+    continueButton.disabled = true
+    continueButton.grab_focus()
     dirtLabel.text = "Dirt: " + str(playerStats.dirt) + " d"
     depthLabel.text = "Depth: " + str(playerStats.depth) + " m"
     input_array = [
@@ -47,7 +47,7 @@ func _process(_delta: float) -> void:
         input_idx = clamp(input_idx + 1, 0, len(input_array) - 1)
         if old_input_idx == len(input_array) - 1:
             input_done = true
-            mainMenuButton.disabled = false
+            continueButton.disabled = false
             return
 
     var input = input_array[input_idx]
@@ -87,15 +87,6 @@ func get_name():
     return name
 
 
-func _on_MainMenuButton_pressed() -> void:
-    SaveAndLoad.record_score(get_name(), playerStats.depth, playerStats.dirt)
-    SaveAndLoad.save_game()
-    playerStats.refill_stats()
-
-    # warning-ignore:return_value_discarded
-    get_tree().change_scene("res://Menus/HighScoreMenu.tscn")
-
-
 func _on_InputBlinkTimer_timeout() -> void:
     var input = input_array[input_idx]
     var letter_obj: VBoxContainer = input.letter_obj
@@ -105,3 +96,12 @@ func _on_InputBlinkTimer_timeout() -> void:
     else:
         cursor.visible = true
         inputBlinkTimer.stop()
+
+
+func _on_ContinueButton_pressed() -> void:
+    SaveAndLoad.record_score(get_name(), playerStats.depth, playerStats.dirt)
+    SaveAndLoad.save_game()
+    playerStats.refill_stats()
+
+    # warning-ignore:return_value_discarded
+    get_tree().change_scene("res://Menus/HighScoreMenu.tscn")

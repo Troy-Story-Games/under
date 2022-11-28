@@ -3,7 +3,7 @@
 [ext_resource path="res://Menus/MainMenu.gd" type="Script" id=1]
 [ext_resource path="res://Fonts/KenneyMiniSquare.ttf" type="DynamicFontData" id=2]
 [ext_resource path="res://icon.png" type="Texture" id=3]
-[ext_resource path="res://World/Block.tscn" type="PackedScene" id=4]
+[ext_resource path="res://World/Blocks/DirtBlock.tscn" type="PackedScene" id=4]
 [ext_resource path="res://Menus/DirtSpawner.tscn" type="PackedScene" id=5]
 [ext_resource path="res://Player/MainMenuLittleGuy.tscn" type="PackedScene" id=6]
 
@@ -42,7 +42,7 @@ extents = Vector2( 12.25, 2.5 )
 extents = Vector2( 49, 2.5 )
 
 [sub_resource type="RectangleShape2D" id=5]
-extents = Vector2( 21.5, 28.5 )
+extents = Vector2( 21.5, 34 )
 
 [sub_resource type="CircleShape2D" id=7]
 radius = 8.0
@@ -55,18 +55,18 @@ script = ExtResource( 1 )
 
 [node name="MenuContainer" type="VBoxContainer" parent="."]
 margin_left = 30.0
-margin_top = 36.0
+margin_top = 28.0
 margin_right = 129.0
-margin_bottom = 108.0
+margin_bottom = 115.0
 custom_constants/separation = 0
 
 [node name="TitleContainer" type="VBoxContainer" parent="MenuContainer"]
 margin_right = 99.0
-margin_bottom = 13.0
+margin_bottom = 19.0
 
 [node name="TitleLabel" type="Label" parent="MenuContainer/TitleContainer"]
 margin_right = 99.0
-margin_bottom = 13.0
+margin_bottom = 19.0
 text = "Under
 Dig yourself into a hole"
 align = 1
@@ -74,49 +74,49 @@ align = 1
 [node name="TitleCollider" type="StaticBody2D" parent="MenuContainer/TitleContainer/TitleLabel"]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="MenuContainer/TitleContainer/TitleLabel/TitleCollider"]
-position = Vector2( 49, 2.5 )
+position = Vector2( 49, 4 )
 shape = SubResource( 6 )
 
 [node name="TitleCollider2" type="StaticBody2D" parent="MenuContainer/TitleContainer/TitleLabel"]
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="MenuContainer/TitleContainer/TitleLabel/TitleCollider2"]
-position = Vector2( 49, 11 )
+position = Vector2( 49, 15 )
 shape = SubResource( 8 )
 
 [node name="ButtonContainer" type="VBoxContainer" parent="MenuContainer"]
-margin_top = 13.0
+margin_top = 19.0
 margin_right = 99.0
-margin_bottom = 72.0
+margin_bottom = 87.0
 
 [node name="Play" type="Button" parent="MenuContainer/ButtonContainer"]
 unique_name_in_owner = true
 margin_left = 28.0
 margin_right = 71.0
-margin_bottom = 17.6232
+margin_bottom = 20.6232
 rect_min_size = Vector2( 43, 0 )
 size_flags_horizontal = 4
 text = "Play"
 
-[node name="Options" type="Button" parent="MenuContainer/ButtonContainer"]
+[node name="ScoreBoard" type="Button" parent="MenuContainer/ButtonContainer"]
 margin_left = 28.0
-margin_top = 21.0
+margin_top = 24.0
 margin_right = 71.0
-margin_bottom = 38.6232
+margin_bottom = 44.6232
 rect_min_size = Vector2( 43, 0 )
 size_flags_horizontal = 4
-text = "Options"
+text = "Scores"
 
-[node name="ButtonsCollider" type="StaticBody2D" parent="MenuContainer/ButtonContainer/Options"]
+[node name="ButtonsCollider" type="StaticBody2D" parent="MenuContainer/ButtonContainer/ScoreBoard"]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="MenuContainer/ButtonContainer/Options/ButtonsCollider"]
-position = Vector2( 21.5, 8.5 )
+[node name="CollisionShape2D" type="CollisionShape2D" parent="MenuContainer/ButtonContainer/ScoreBoard/ButtonsCollider"]
+position = Vector2( 21.5, 10 )
 shape = SubResource( 5 )
 
 [node name="Quit" type="Button" parent="MenuContainer/ButtonContainer"]
 margin_left = 28.0
-margin_top = 42.0
+margin_top = 48.0
 margin_right = 71.0
-margin_bottom = 59.6232
+margin_bottom = 68.6232
 rect_min_size = Vector2( 43, 0 )
 size_flags_horizontal = 4
 text = "Quit"
@@ -147,7 +147,7 @@ position = Vector2( -7, 128 )
 shape = SubResource( 7 )
 
 [connection signal="pressed" from="MenuContainer/ButtonContainer/Play" to="." method="_on_Play_pressed"]
-[connection signal="pressed" from="MenuContainer/ButtonContainer/Options" to="." method="_on_Options_pressed"]
+[connection signal="pressed" from="MenuContainer/ButtonContainer/ScoreBoard" to="." method="_on_ScoreBoard_pressed"]
 [connection signal="pressed" from="MenuContainer/ButtonContainer/Quit" to="." method="_on_Quit_pressed"]
 [connection signal="timeout" from="LittleGuyStartTimer" to="." method="_on_LittleGuyStartTimer_timeout"]
 [connection signal="stopped" from="MainMenuLittleGuy" to="." method="_on_MainMenuLittleGuy_stopped"]

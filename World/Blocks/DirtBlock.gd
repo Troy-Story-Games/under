@@ -1,7 +1,9 @@
 extends KinematicBody2D
-class_name Block
+class_name DirtBlock
 
-const BlockDestroyEffect = preload("res://Effects/BlockDestroyEffect.tscn")
+const DestroyEffectScene = preload("res://Effects/BlockEffects/DestroyEffect.tscn")
+const DirtPhysicsParticleScene = preload("res://Effects/BlockEffects/ParticleTypes/DirtPhysicsParticle.tscn")
+const DirtPhysicsParticleSmallScene = preload("res://Effects/BlockEffects/ParticleTypes/DirtPhysicsParticleSmall.tscn")
 
 var on_screen: = false
 
@@ -17,7 +19,8 @@ func _ready() -> void:
 func dig() -> void:
     # warning-ignore:return_value_discarded
     if on_screen:
-        Utils.instance_scene_on_main(BlockDestroyEffect, global_position)
+        var effect: DestroyEffect = Utils.instance_scene_on_main(DestroyEffectScene, global_position)
+        effect.create_effect(DirtPhysicsParticleScene, DirtPhysicsParticleSmallScene)
     SoundFx.play("digging", 1, -15)
     queue_free()
 

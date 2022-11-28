@@ -1,7 +1,7 @@
 extends Node2D
 class_name DirtSpawner
 
-const PhysicsDirtScene = preload("res://Effects/PhysicsDirt.tscn")
+const DirtPhysicsParticleScene = preload("res://Effects/BlockEffects/ParticleTypes/DirtPhysicsParticle.tscn")
 
 export(int) var MAX_BULLET_SPEED = 65
 export(int) var MIN_BULLET_SPEED = 20
@@ -29,7 +29,7 @@ func stop():
 
 
 func spawnDirt():
-    var dirt: RigidBody2D = Utils.instance_scene_on_main(PhysicsDirtScene, dirtSpawnPoint.global_position)
+    var dirt: RigidBody2D = Utils.instance_scene_on_main(DirtPhysicsParticleScene, dirtSpawnPoint.global_position)
     var direction = global_position.direction_to(fireDirection.global_position)
     var speed = rand_range(MIN_BULLET_SPEED, MAX_BULLET_SPEED)
     var velocity = direction * speed

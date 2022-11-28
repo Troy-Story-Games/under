@@ -1,6 +1,6 @@
 [gd_scene load_steps=7 format=2]
 
-[ext_resource path="res://World/Rock.gd" type="Script" id=1]
+[ext_resource path="res://World/Blocks/Rock.gd" type="Script" id=1]
 [ext_resource path="res://Assets/Blocks.png" type="Texture" id=2]
 [ext_resource path="res://Overlap/Hitbox.tscn" type="PackedScene" id=3]
 

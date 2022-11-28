@@ -4,12 +4,12 @@ class_name MainGame
 const LEFT_SIDE_WALL_X_POS = 28
 const RIGHT_SIDE_WALL_X_POS = 128
 
-const BlockScene = preload("res://World/Block.tscn")
-const RockScene = preload("res://World/Rock.tscn")
-const BombBlockScene = preload("res://World/BombBlock.tscn")
+const BlockScene = preload("res://World/Blocks/DirtBlock.tscn")
+const RockScene = preload("res://World/Blocks/Rock.tscn")
+const BombBlockScene = preload("res://World/Blocks/BombBlock.tscn")
 const PlayerScene = preload("res://Player/Player.tscn")
 const PlayerDeathEffectScene = preload("res://Effects/PlayerDeathEffect.tscn")
-const RockDropScene = preload("res://World/RockDrop.tscn")
+const RockDropScene = preload("res://World/Blocks/RockDrop.tscn")
 const WarningArrowScene = preload("res://Effects/WarningArrow.tscn")
 const SideWallSpriteScene = preload("res://World/SideWallSprite.tscn")
 
@@ -118,7 +118,7 @@ func _ready():
     # warning-ignore:return_value_discarded
     playerStats.connect("lives_changed", self, "_on_PlayerStats_lives_changed")
     # warning-ignore:return_value_discarded
-    playerStats.connect("depth_changed", self, "_on_PlayerStats_depth_changed")
+    playerStats.connect("player_depth_changed", self, "_on_PlayerStats_player_depth_changed")
 
     gameUI.set_dirt(0)
     gameUI.set_lives(playerStats.lives)
@@ -226,7 +226,7 @@ func _on_PlayerStats_lives_changed(value):
     gameUI.set_lives(value)
     # TODO: Play sound, maybe particles
 
-func _on_PlayerStats_depth_changed(value):
+func _on_PlayerStats_player_depth_changed(value):
     gameUI.set_depth(value)
 
 func _on_PlayerStats_game_over():

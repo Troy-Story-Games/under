@@ -10,24 +10,9 @@ config_version=4
 
 _global_script_classes=[ {
 "base": "KinematicBody2D",
-"class": "Block",
-"language": "GDScript",
-"path": "res://World/Block.gd"
-}, {
-"base": "Node2D",
-"class": "BlockDestroyEffect",
-"language": "GDScript",
-"path": "res://Effects/BlockDestroyEffect.gd"
-}, {
-"base": "RigidBody2D",
-"class": "BlockParticle",
-"language": "GDScript",
-"path": "res://Effects/BlockParticle.gd"
-}, {
-"base": "KinematicBody2D",
 "class": "BombBlock",
 "language": "GDScript",
-"path": "res://World/BombBlock.gd"
+"path": "res://World/Blocks/BombBlock.gd"
 }, {
 "base": "KinematicBody2D",
 "class": "CollectibleItem",
@@ -35,9 +20,39 @@ _global_script_classes=[ {
 "path": "res://Pickup/CollectibleItem.gd"
 }, {
 "base": "Node2D",
+"class": "DestroyEffect",
+"language": "GDScript",
+"path": "res://Effects/BlockEffects/DestroyEffect.gd"
+}, {
+"base": "KinematicBody2D",
+"class": "DirtBlock",
+"language": "GDScript",
+"path": "res://World/Blocks/DirtBlock.gd"
+}, {
+"base": "PhysicsParticle",
+"class": "DirtPhysicsParticle",
+"language": "GDScript",
+"path": "res://Effects/BlockEffects/ParticleTypes/DirtPhysicsParticle.gd"
+}, {
+"base": "PhysicsParticle",
+"class": "DirtPhysicsParticleSmall",
+"language": "GDScript",
+"path": "res://Effects/BlockEffects/ParticleTypes/DirtPhysicsParticleSmall.gd"
+}, {
+"base": "Node2D",
 "class": "DirtSpawner",
 "language": "GDScript",
 "path": "res://Menus/DirtSpawner.gd"
+}, {
+"base": "PhysicsParticle",
+"class": "EmeraldPhysicsParticle",
+"language": "GDScript",
+"path": "res://Effects/BlockEffects/ParticleTypes/EmeraldPhysicsParticle.gd"
+}, {
+"base": "PhysicsParticle",
+"class": "EmeraldPhysicsParticleSmall",
+"language": "GDScript",
+"path": "res://Effects/BlockEffects/ParticleTypes/EmeraldPhysicsParticleSmall.gd"
 }, {
 "base": "CenterContainer",
 "class": "GameOverMenu",
@@ -79,6 +94,11 @@ _global_script_classes=[ {
 "language": "GDScript",
 "path": "res://Menus/MainMenu.gd"
 }, {
+"base": "RigidBody2D",
+"class": "PhysicsParticle",
+"language": "GDScript",
+"path": "res://Effects/BlockEffects/PhysicsParticle.gd"
+}, {
 "base": "KinematicBody2D",
 "class": "Player",
 "language": "GDScript",
@@ -92,30 +112,33 @@ _global_script_classes=[ {
 "base": "KinematicBody2D",
 "class": "Rock",
 "language": "GDScript",
-"path": "res://World/Rock.gd"
-}, {
-"base": "Node2D",
-"class": "RockDestroyEffect",
-"language": "GDScript",
-"path": "res://Effects/RockDestroyEffect.gd"
+"path": "res://World/Blocks/Rock.gd"
 }, {
 "base": "KinematicBody2D",
 "class": "RockDrop",
 "language": "GDScript",
-"path": "res://World/RockDrop.gd"
+"path": "res://World/Blocks/RockDrop.gd"
 }, {
-"base": "RigidBody2D",
-"class": "RockParticle",
+"base": "PhysicsParticle",
+"class": "RockPhysicsParticle",
 "language": "GDScript",
-"path": "res://Effects/RockParticle.gd"
+"path": "res://Effects/BlockEffects/ParticleTypes/RockPhysicsParticle.gd"
+}, {
+"base": "PhysicsParticle",
+"class": "RockPhysicsParticleSmall",
+"language": "GDScript",
+"path": "res://Effects/BlockEffects/ParticleTypes/RockPhysicsParticleSmall.gd"
 } ]
 _global_script_class_icons={
-"Block": "",
-"BlockDestroyEffect": "",
-"BlockParticle": "",
 "BombBlock": "",
 "CollectibleItem": "",
+"DestroyEffect": "",
+"DirtBlock": "",
+"DirtPhysicsParticle": "",
+"DirtPhysicsParticleSmall": "",
 "DirtSpawner": "",
+"EmeraldPhysicsParticle": "",
+"EmeraldPhysicsParticleSmall": "",
 "GameOverMenu": "",
 "GameUI": "",
 "HighScoreMenu": "",
@@ -124,12 +147,13 @@ _global_script_class_icons={
 "MainGame": "",
 "MainInstances": "",
 "MainMenu": "",
+"PhysicsParticle": "",
 "Player": "",
 "PlayerStats": "",
 "Rock": "",
-"RockDestroyEffect": "",
 "RockDrop": "",
-"RockParticle": ""
+"RockPhysicsParticle": "",
+"RockPhysicsParticleSmall": ""
 }
 
 [application]
@@ -250,7 +274,7 @@ jump={
 2d_physics/layer_3="PlayerHurtbox"
 2d_physics/layer_4="EnemyHurtbox"
 2d_physics/layer_5="Pickup"
-2d_physics/layer_6="Dirt"
+2d_physics/layer_6="PhysicsParticle"
 
 [physics]
 

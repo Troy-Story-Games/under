@@ -25,10 +25,6 @@ func _on_Play_pressed() -> void:
     get_tree().change_scene("res://Game.tscn")
 
 
-func _on_Options_pressed() -> void:
-    print("Options pressed")
-
-
 func _on_Quit_pressed() -> void:
     get_tree().quit()
 
@@ -40,3 +36,8 @@ func _on_MainMenuLittleGuy_stopped():
 
 func _on_LittleGuyStartTimer_timeout():
     littleGuy.start()
+
+
+func _on_ScoreBoard_pressed() -> void:
+    # warning-ignore:return_value_discarded
+    get_tree().change_scene("res://Menus/HighScoreMenu.tscn")

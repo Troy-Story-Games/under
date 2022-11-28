@@ -1,6 +1,11 @@
 extends KinematicBody2D
 class_name RockDrop
 
+const DestroyEffectScene = preload("res://Effects/BlockEffects/DestroyEffect.tscn")
+const RockPhysicsParticleScene = preload("res://Effects/BlockEffects/ParticleTypes/RockPhysicsParticle.tscn")
+const RockPhysicsParticleSmallScene = preload("res://Effects/BlockEffects/ParticleTypes/RockPhysicsParticleSmall.tscn")
+const RockScene = preload("res://World/Blocks/Rock.tscn")
+
 export(int) var GRAVITY = 300
 export(int) var MAX_FALL_SPEED = 150
 export(int) var EMBED_MAX = 8
@@ -16,12 +21,28 @@ var stop_pos = 0
 onready var hitboxCollider = $Hitbox/Collider
 
 
+func handle_invincible_player_collision():
+    var floor_collision = move_and_collide(Vector2.DOWN, true, true, true)
+    if not floor_collision:
+        return
+
+    var floor_collider = floor_collision.collider
+    # warning-ignore:unsafe_property_access
+    if floor_collider is Player and floor_collider.hurtbox.invincible:
+        var effect: DestroyEffect = Utils.instance_scene_on_main(DestroyEffectScene, global_position)
+        effect.create_effect(RockPhysicsParticleScene, RockPhysicsParticleSmallScene)
+        queue_free()
+
+
 func _physics_process(delta: float) -> void:
+    handle_invincible_player_collision()
+
     if done_falling and fix_pos:
         apply_gravity(delta)
         motion = move_and_slide(motion, Vector2.UP)
         if motion == Vector2.ZERO:
             fix_pos = false
+            switch_to_rock()
         return
     if done_falling and not fix_pos:
         return
@@ -50,6 +71,12 @@ func _physics_process(delta: float) -> void:
 func apply_gravity(delta):
     motion.y += GRAVITY * delta
     motion.y = min(motion.y, MAX_FALL_SPEED)
+
+
+func switch_to_rock():
+    # warning-ignore:return_value_discarded
+    Utils.instance_scene_on_main(RockScene, global_position)
+    queue_free()
 
 
 func _on_Digger_body_entered(body: Node) -> void:

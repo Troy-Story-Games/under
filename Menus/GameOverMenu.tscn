@@ -172,16 +172,16 @@ margin_top = 56.0
 margin_right = 88.0
 margin_bottom = 60.0
 
-[node name="MainMenuButton" type="Button" parent="VBoxContainer"]
+[node name="ContinueButton" type="Button" parent="VBoxContainer"]
 unique_name_in_owner = true
 margin_top = 60.0
 margin_right = 88.0
 margin_bottom = 80.6232
-text = "Main Menu"
+text = "CONTINUE"
 
 [node name="InputBlinkTimer" type="Timer" parent="."]
 wait_time = 0.55
 autostart = true
 
-[connection signal="pressed" from="VBoxContainer/MainMenuButton" to="." method="_on_MainMenuButton_pressed"]
+[connection signal="pressed" from="VBoxContainer/ContinueButton" to="." method="_on_ContinueButton_pressed"]
 [connection signal="timeout" from="InputBlinkTimer" to="." method="_on_InputBlinkTimer_timeout"]

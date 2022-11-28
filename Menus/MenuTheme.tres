@@ -1,4 +1,4 @@
-[gd_resource type="Theme" load_steps=6 format=2]
+[gd_resource type="Theme" load_steps=10 format=2]
 
 [ext_resource path="res://Fonts/KenneyMiniSquare.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://icon.png" type="Texture" id=2]
@@ -16,6 +16,24 @@ draw_center = false
 color = Color( 1, 1, 1, 1 )
 thickness = 2
 
+[sub_resource type="StyleBoxLine" id=5]
+color = Color( 1, 1, 1, 1 )
+thickness = 2
+vertical = true
+
+[sub_resource type="StyleBoxLine" id=6]
+color = Color( 1, 1, 1, 1 )
+thickness = 3
+vertical = true
+
+[sub_resource type="StyleBoxLine" id=7]
+color = Color( 0.72, 0.72, 0.72, 1 )
+thickness = 3
+vertical = true
+
+[sub_resource type="StyleBoxLine" id=8]
+vertical = true
+
 [sub_resource type="DynamicFont" id=1]
 size = 8
 extra_spacing_top = -3
@@ -30,3 +48,7 @@ Button/styles/hover = SubResource( 3 )
 Button/styles/normal = SubResource( 3 )
 Button/styles/pressed = SubResource( 3 )
 HSeparator/styles/separator = SubResource( 4 )
+VScrollBar/styles/grabber = SubResource( 5 )
+VScrollBar/styles/grabber_highlight = SubResource( 6 )
+VScrollBar/styles/grabber_pressed = SubResource( 7 )
+VScrollBar/styles/scroll = SubResource( 8 )

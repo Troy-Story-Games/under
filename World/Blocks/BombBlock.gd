@@ -40,6 +40,7 @@ func in_y_range(pos: Vector2):
 
 
 func explode():
+    Events.emit_signal("add_screenshake", 0.055, 0.2)
     SoundFx.play("bomb_explode", 0.8, -15)
     var bodies: Array = explodeArea.get_overlapping_bodies()
     for body in bodies:

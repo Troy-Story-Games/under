@@ -20,7 +20,7 @@ var depth: int = 0 setget set_depth
 
 func set_depth(value: int):
     depth = value
-    emit_signal("player_depth_changed")
+    emit_signal("player_depth_changed", depth)
 
 
 func set_dirt(value: int):

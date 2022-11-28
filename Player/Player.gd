@@ -30,7 +30,7 @@ enum WallAxis {
 var wall_collision: KinematicCollision2D = null
 var floor_collision: KinematicCollision2D = null
 var ceiling_collision: KinematicCollision2D = null
-var dig_block: Block = null
+var dig_block = null
 var state = MOVE
 var motion = Vector2.ZERO
 var just_jumped = false
@@ -47,14 +47,27 @@ onready var cameraFollow = $CameraFollow
 onready var footstepPlayer = $FootstepAudioStreamPlayer2D
 onready var coyoteJumpTimer = $CoyoteJumpTimer
 onready var animationPlayer = $AnimationPlayer
+onready var blinkAnimationPlayer = $BlinkAnimationPlayer
 onready var safeSpawnArea = $SafeSpawnArea
 onready var groundPoundDiggerCollider = $GroundPoundDigger/CollisionShape2D
 onready var fallTimer = $FallTimer
+onready var hurtbox = $Hurtbox
 
 
 func _ready():
     just_spawned = true
     groundPoundDiggerCollider.disabled = true
+    hurtbox.connect("invincibility_ended", self, "_on_Hurtbox_invincibility_ended")
+    start_invincibility(3)
+
+
+func start_invincibility(duration: float):
+    blinkAnimationPlayer.play("Blink")
+    hurtbox.start_invincibility(duration)
+
+
+func _on_Hurtbox_invincibility_ended():
+    blinkAnimationPlayer.play("RESET")
 
 
 func _physics_process(delta):
@@ -114,6 +127,7 @@ func _physics_process(delta):
                 groundPoundDiggerCollider.disabled = true
                 ground_pound_start_pos = 0
                 state = MOVE
+                Events.emit_signal("add_screenshake", 0.055, 0.2)
             else:
                 motion.y += GROUND_POUND_ACCELERATION * delta
                 motion.y = min(motion.y, GROUND_POUND_MAX_SPEED)
@@ -241,7 +255,7 @@ func double_press_dig():
     elif left_wall:
         collider = left_wall.collider
 
-    if collider == null or not collider is Block:
+    if collider == null or not collider is DirtBlock:
         return
 
     dig_block = collider
@@ -357,24 +371,27 @@ func assign_camera_follow(remote_path: String):
 func dig_check():
     if (Input.is_action_pressed("ui_right") or Input.is_action_pressed("ui_left")) and wall_collision and on_floor():
         var wall_collider: Node = wall_collision.collider
-        if wall_collider is Block:
+        if wall_collider is DirtBlock:
             dig_block = wall_collider
             state = DIG
 
     if Input.is_action_pressed("ui_down") and floor_collision:
         var floor_collider: Node = floor_collision.collider
-        if floor_collider is Block:
+        if floor_collider is DirtBlock:
             dig_block = floor_collider
             state = DIG
 
     if (Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("ui_up")) and ceiling_collision and ceiling_close():
         var ceiling_collider: Node = ceiling_collision.collider
-        if ceiling_collider is Block:
+        if ceiling_collider is DirtBlock:
             dig_block = ceiling_collider
             state = DIG
 
 
 func take_damage(damage: int) -> void:
+    if hurtbox.invincible:
+        return
+
     # TODO: Consider playing a sound effect
     playerStats.health -= damage
     # TODO: Consider playing a flash or damage animation
@@ -386,8 +403,7 @@ func _on_Hurtbox_take_damage(damage : int, _area : Area2D):
 
 func _on_ItemCollector_body_entered(body):
     if body is CollectibleItem:
-        if body.IS_DIRT:
-            playerStats.dirt += 1
+        playerStats.dirt += body.VALUE
     body.queue_free()
 
 
