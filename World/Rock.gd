@@ -1,7 +1,7 @@
 extends KinematicBody2D
 class_name Rock
 
-const BlockDestroyEffect = preload("res://Effects/BlockDestroyEffect.tscn")
+const RockDestroyEffect = preload("res://Effects/RockDestroyEffect.tscn")
 
 export(int) var GRAVITY = 500
 export(int) var MAX_FALL_SPEED = 300
@@ -31,7 +31,7 @@ func _ready() -> void:
 func dig() -> void:
     # warning-ignore:return_value_discarded
     if on_screen:
-        Utils.instance_scene_on_main(BlockDestroyEffect, global_position)
+        Utils.instance_scene_on_main(RockDestroyEffect, global_position)
     SoundFx.play("digging", 1, -15)
     queue_free()
 
