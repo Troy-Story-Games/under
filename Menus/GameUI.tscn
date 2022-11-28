@@ -1,14 +1,22 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=8 format=2]
 
-[ext_resource path="res://Fonts/KenneyPixel.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://Fonts/KenneyMiniSquare.ttf" type="DynamicFontData" id=1]
 [ext_resource path="res://Menus/GameUI.gd" type="Script" id=2]
+[ext_resource path="res://Assets/Player_solo.png" type="Texture" id=3]
+[ext_resource path="res://Assets/X.png" type="Texture" id=4]
+
+[sub_resource type="StyleBoxLine" id=3]
+color = Color( 1, 1, 1, 1 )
+grow_begin = 0.0
+grow_end = 0.0
 
 [sub_resource type="DynamicFont" id=1]
-size = 12
+size = 8
 font_data = ExtResource( 1 )
 
 [sub_resource type="Theme" id=2]
 default_font = SubResource( 1 )
+HSeparator/styles/separator = SubResource( 3 )
 
 [node name="GameUI" type="HBoxContainer"]
 anchor_right = 1.0
@@ -17,24 +25,55 @@ theme = SubResource( 2 )
 custom_constants/separation = 0
 script = ExtResource( 2 )
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="LeftUI" type="VBoxContainer" parent="."]
 margin_right = 28.0
 margin_bottom = 144.0
 rect_min_size = Vector2( 28, 0 )
 custom_constants/separation = 0
 
-[node name="Label" type="Label" parent="VBoxContainer"]
+[node name="Label" type="Label" parent="LeftUI"]
 margin_right = 28.0
 margin_bottom = 10.0
 text = "Depth"
 
-[node name="DepthLabel" type="Label" parent="VBoxContainer"]
+[node name="DepthLabel" type="Label" parent="LeftUI"]
 unique_name_in_owner = true
 margin_top = 10.0
 margin_right = 28.0
 margin_bottom = 20.0
 text = "9999 m"
 clip_text = true
+
+[node name="HSeparator" type="HSeparator" parent="LeftUI"]
+margin_top = 20.0
+margin_right = 28.0
+margin_bottom = 24.0
+
+[node name="LivesHBox" type="HBoxContainer" parent="LeftUI"]
+margin_top = 24.0
+margin_right = 28.0
+margin_bottom = 34.0
+custom_constants/separation = 1
+
+[node name="TextureRect" type="TextureRect" parent="LeftUI/LivesHBox"]
+margin_right = 8.0
+margin_bottom = 10.0
+texture = ExtResource( 3 )
+stretch_mode = 4
+
+[node name="TextureRect2" type="TextureRect" parent="LeftUI/LivesHBox"]
+margin_left = 9.0
+margin_right = 14.0
+margin_bottom = 10.0
+texture = ExtResource( 4 )
+stretch_mode = 4
+
+[node name="LivesLabel" type="Label" parent="LeftUI/LivesHBox"]
+unique_name_in_owner = true
+margin_left = 15.0
+margin_right = 23.0
+margin_bottom = 10.0
+text = "10"
 
 [node name="Control" type="Control" parent="."]
 margin_left = 28.0
@@ -43,7 +82,7 @@ margin_bottom = 144.0
 rect_min_size = Vector2( 104, 0 )
 size_flags_horizontal = 3
 
-[node name="VBoxContainer2" type="VBoxContainer" parent="."]
+[node name="RightUI" type="VBoxContainer" parent="."]
 margin_left = 132.0
 margin_right = 160.0
 margin_bottom = 144.0
@@ -51,13 +90,13 @@ rect_min_size = Vector2( 28, 0 )
 size_flags_horizontal = 3
 custom_constants/separation = 0
 
-[node name="Label2" type="Label" parent="VBoxContainer2"]
+[node name="Label2" type="Label" parent="RightUI"]
 margin_right = 28.0
 margin_bottom = 10.0
 text = "Dirt"
 align = 2
 
-[node name="DirtLabel" type="Label" parent="VBoxContainer2"]
+[node name="DirtLabel" type="Label" parent="RightUI"]
 unique_name_in_owner = true
 margin_top = 10.0
 margin_right = 28.0

@@ -1,6 +1,9 @@
 extends Node
 class_name MainGame
 
+const LEFT_SIDE_WALL_X_POS = 28
+const RIGHT_SIDE_WALL_X_POS = 128
+
 const BlockScene = preload("res://World/Block.tscn")
 const RockScene = preload("res://World/Rock.tscn")
 const BombBlockScene = preload("res://World/BombBlock.tscn")
@@ -8,6 +11,7 @@ const PlayerScene = preload("res://Player/Player.tscn")
 const PlayerDeathEffectScene = preload("res://Effects/PlayerDeathEffect.tscn")
 const RockDropScene = preload("res://World/RockDrop.tscn")
 const WarningArrowScene = preload("res://Effects/WarningArrow.tscn")
+const SideWallSpriteScene = preload("res://World/SideWallSprite.tscn")
 
 enum CaveCarving {
     NOT_CARVING,
@@ -42,6 +46,7 @@ enum GameEvent {
 export(int) var REGENERATE_BLOCK_THRESHOLD = 80
 
 # How many rows to generate each time we call "generate_more_blocks()"
+# This is also the screen height in blocks. 144 pixels high is 18 blocks
 export(int) var ROW_BUFFER = 18
 
 # The depth (in number of rows) before caves begin to generate
@@ -72,6 +77,10 @@ export(int) var EVENT_COOLDOWN_MIN = 1
 # The depth (in blocks) at which the event cooldown should be at its minimum value
 export(int) var EVENT_MAX_DIFFICULTY_DEPTH = 500
 
+# The depth goal posts (in meters) are this far apart
+export(int) var DEPTH_GOAL_INTERVAL = 500
+export(int) var DEPTH_GOAL_FLAG_X_OFFSET = 50
+
 onready var camera = $Camera2D
 onready var leftWall = $LeftWall
 onready var rightWall = $RightWall
@@ -79,6 +88,7 @@ onready var newRowSpawn = $NewRowSpawn
 onready var gameUI = $Camera2D/CanvasLayer/GameUI
 onready var eventCooldownTimer = $EventCooldownTimer
 onready var canvasLayer = $Camera2D/CanvasLayer
+onready var depthGoalFlag = $DepthGoalFlagSprite
 
 var event_cooldown_time: float = 0.0
 var spawn_point: Vector2 = Vector2.ZERO
@@ -95,6 +105,7 @@ var cave_carve_type = CaveType.H_LINE
 var cave_carve_state = CaveCarving.NOT_CARVING
 var cave_type_data = {}
 var left_x_pos: float = 0.0
+var target_depth_goal: int = 0
 
 
 func _ready():
@@ -104,13 +115,27 @@ func _ready():
     playerStats.connect("game_over", self, "_on_PlayerStats_game_over")
     # warning-ignore:return_value_discarded
     playerStats.connect("player_dirt_changed", self, "_on_PlayerStats_dirt_changed")
+    # warning-ignore:return_value_discarded
+    playerStats.connect("lives_changed", self, "_on_PlayerStats_lives_changed")
+    # warning-ignore:return_value_discarded
+    playerStats.connect("depth_changed", self, "_on_PlayerStats_depth_changed")
 
     gameUI.set_dirt(0)
+    gameUI.set_lives(playerStats.lives)
     spawn_point = Vector2((Utils.NUM_COLS * Utils.BLOCK_SIZE) / 2.0, newRowSpawn.global_position.y - Utils.BLOCK_SIZE * 2)
     left_x_pos = newRowSpawn.global_position.x
     zero_depth = newRowSpawn.global_position.y
+
+    # Spawn initial left and right side walls
+    # warning-ignore:return_value_discarded
+    Utils.instance_scene_on_main(SideWallSpriteScene, Vector2(LEFT_SIDE_WALL_X_POS, newRowSpawn.global_position.y))
+    # warning-ignore:return_value_discarded
+    Utils.instance_scene_on_main(SideWallSpriteScene, Vector2(RIGHT_SIDE_WALL_X_POS, newRowSpawn.global_position.y))
+
     cave_depth = zero_depth + (CAVE_DEPTH * Utils.BLOCK_SIZE)
     event_cooldown_time = EVENT_COOLDOWN_MAX
+    target_depth_goal = DEPTH_GOAL_INTERVAL
+    depthGoalFlag.global_position = Vector2(DEPTH_GOAL_FLAG_X_OFFSET, meters_to_pixels(target_depth_goal))
     generate_more_blocks()
 
     respawn_player()
@@ -122,6 +147,11 @@ func pos_to_pixel_depth(pos: Vector2) -> float:
 
 func pos_to_block_depth(pos: Vector2) -> float:
     return pos_to_pixel_depth(pos) / float(Utils.BLOCK_SIZE)
+
+
+func meters_to_pixels(meters: int) -> int:
+    # Convert a number of meters in depth to a y position.
+    return int(zero_depth) + int((meters / float(Utils.BLOCK_SIZE_IN_METERS)) * Utils.BLOCK_SIZE)
 
 
 func _process(_delta: float) -> void:
@@ -138,8 +168,7 @@ func _process(_delta: float) -> void:
     current_depth_pixels = pos_to_pixel_depth(player.global_position)
     current_depth_blocks = pos_to_block_depth(player.global_position)
     current_depth_meters = current_depth_blocks * Utils.BLOCK_SIZE_IN_METERS
-    gameUI.set_depth(ceil(current_depth_meters))
-
+    playerStats.set_depth(int(ceil(current_depth_meters)))
     if current_depth_blocks >= EVENT_START_DEPTH and eventCooldownTimer.time_left == 0:
         eventCooldownTimer.start(event_cooldown_time)
 
@@ -147,6 +176,17 @@ func _process(_delta: float) -> void:
         var depth_difficulty_factor: float = current_depth_blocks / float(EVENT_MAX_DIFFICULTY_DEPTH)
         var new_cooldown_time = (EVENT_COOLDOWN_MAX - EVENT_COOLDOWN_MIN) * (1 - depth_difficulty_factor)
         event_cooldown_time = clamp(new_cooldown_time, EVENT_COOLDOWN_MIN, EVENT_COOLDOWN_MAX)
+
+    if current_depth_meters >= target_depth_goal:
+        depth_goal_reached()
+
+
+func depth_goal_reached():
+    print("DEPTH GOAL REACHED!")
+    target_depth_goal += DEPTH_GOAL_INTERVAL
+    depthGoalFlag.global_position = Vector2(DEPTH_GOAL_FLAG_X_OFFSET, meters_to_pixels(target_depth_goal))
+    # TODO: play a success sound
+    # TODO: Spawn 100 dirt
 
 
 func _on_PlayerStats_dirt_changed(value: int):
@@ -182,8 +222,14 @@ func _on_PlayerStats_player_died():
         respawn_player()
 
 
+func _on_PlayerStats_lives_changed(value):
+    gameUI.set_lives(value)
+    # TODO: Play sound, maybe particles
+
+func _on_PlayerStats_depth_changed(value):
+    gameUI.set_depth(value)
+
 func _on_PlayerStats_game_over():
-    playerStats.refill_stats()
     # warning-ignore:return_value_discarded
     get_tree().change_scene("res://Menus/GameOverMenu.tscn")
 
@@ -267,6 +313,12 @@ func generate_more_blocks(slow: bool = false):
 
     # Update the row spawn position
     newRowSpawn.global_position.y += (ROW_BUFFER * Utils.BLOCK_SIZE)
+
+    # Place the left and right side walls
+    # warning-ignore:return_value_discarded
+    Utils.instance_scene_on_main(SideWallSpriteScene, Vector2(LEFT_SIDE_WALL_X_POS, newRowSpawn.global_position.y))
+    # warning-ignore:return_value_discarded
+    Utils.instance_scene_on_main(SideWallSpriteScene, Vector2(RIGHT_SIDE_WALL_X_POS, newRowSpawn.global_position.y))
 
     cave_carve_state = CaveCarving.NEW_CAVE
 
