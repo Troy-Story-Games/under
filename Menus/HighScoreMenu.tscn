@@ -30,6 +30,7 @@ align = 3
 valign = 1
 
 [node name="MainMenuButton" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
 margin_top = 29.0
 margin_right = 52.1505
 margin_bottom = 45.6232

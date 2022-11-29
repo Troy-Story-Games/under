@@ -12,6 +12,7 @@ const PlayerDeathEffectScene = preload("res://Effects/PlayerDeathEffect.tscn")
 const RockDropScene = preload("res://World/Blocks/RockDrop.tscn")
 const WarningArrowScene = preload("res://Effects/WarningArrow.tscn")
 const SideWallSpriteScene = preload("res://World/SideWallSprite.tscn")
+const ChestBlockScene = preload("res://World/Blocks/ChestBlock.tscn")
 
 enum CaveCarving {
     NOT_CARVING,
@@ -32,6 +33,11 @@ enum CaveType {
 enum GameHazard {
     ROCK,
     BOMB
+}
+
+# Blocks that spawn as part of level generation (but are good)
+enum GameGift {
+    CHEST
 }
 
 # Events that happen outside of level generation
@@ -59,11 +65,15 @@ export(int) var CAVE_DEPTH = 24
 export(float) var V_TUNNEL_DOWN_FACTOR = 0.65
 export(float) var H_TUNNEL_DOWN_FACTOR = 0.45
 
-# Chance that a hazard is generated.
-export(float) var HAZARD_CHANCE = 0.05
+# Chance that a hazard or gift is generated.
+export(float) var HAZARD_OR_GIFT_CHANCE = 0.05
+
+# Chance that a gift is generated when HAZARD_OR_GIFT_CHANCE happens
+# Translated: 1% of 5% of the time...a gift will be generated
+export(float) var GIFT_CHANCE = 0.01
 
 # The depth (in blocks) at which GameHazards will start
-export(int) var HAZARD_START_DEPTH = 10
+export(int) var HAZARD_OR_GIFT_START_DEPTH = 10
 
 # The depth (in blocks) at which GameEvents will start
 export(int) var EVENT_START_DEPTH = 24
@@ -338,18 +348,32 @@ func generate_more_blocks(slow: bool = false):
     cave_carve_state = CaveCarving.NOT_CARVING
 
 
-func spawn_hazard(pos: Vector2):
+func spawn_hazard_or_gift(pos: Vector2):
+    var spawn_gift: bool = false
+    if randf() < GIFT_CHANCE:
+        spawn_gift = true
+
     var hazard_types = GameHazard.values()
     hazard_types.shuffle()
     var hazard = hazard_types[0]
 
-    match hazard:
-        GameHazard.ROCK:
-            # warning-ignore:return_value_discarded
-            Utils.instance_scene_on_main(RockScene, pos)
-        GameHazard.BOMB:
-            # warning-ignore:return_value_discarded
-            Utils.instance_scene_on_main(BombBlockScene, pos)
+    var gift_types = GameGift.values()
+    gift_types.shuffle()
+    var gift = gift_types[0]
+
+    if not spawn_gift:
+        match hazard:
+            GameHazard.ROCK:
+                # warning-ignore:return_value_discarded
+                Utils.instance_scene_on_main(RockScene, pos)
+            GameHazard.BOMB:
+                # warning-ignore:return_value_discarded
+                Utils.instance_scene_on_main(BombBlockScene, pos)
+    else:
+        match gift:
+            GameGift.CHEST:
+                # warning-ignore:return_value_discarded
+                Utils.instance_scene_on_main(ChestBlockScene, pos)
 
 
 func spawn_event():
@@ -391,8 +415,8 @@ func spawn_event():
 
 
 func place_world_block(pos: Vector2) -> void:
-    if randf() < HAZARD_CHANCE and pos_to_block_depth(pos) > HAZARD_START_DEPTH:
-        spawn_hazard(pos)
+    if randf() < HAZARD_OR_GIFT_CHANCE and pos_to_block_depth(pos) > HAZARD_OR_GIFT_START_DEPTH:
+        spawn_hazard_or_gift(pos)
     else:
         # warning-ignore:return_value_discarded
         Utils.instance_scene_on_main(BlockScene, pos)

@@ -3,6 +3,7 @@
 [ext_resource path="res://Pickup/PhysicsParticlePickup.tscn" type="PackedScene" id=1]
 
 [node name="EmeraldPhysicsParticlePickupSmall" instance=ExtResource( 1 )]
+VALUE = 50
 
 [node name="Sprite" parent="." index="0"]
 frame = 5

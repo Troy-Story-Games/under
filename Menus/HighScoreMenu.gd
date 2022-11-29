@@ -6,6 +6,8 @@ var MAX_TO_DISPLAY = 15
 var high_scores = []
 var high_score_text = ""
 onready var label = $"%TextEdit"
+onready var mainMenuButton = $"%MainMenuButton"
+
 
 class CustomSorter:
     static func sort_descending(a, b):
@@ -15,6 +17,7 @@ class CustomSorter:
 
 
 func _ready():
+    mainMenuButton.grab_focus()
     high_scores = SaveAndLoad.custom_data.high_scores
     high_score_text = "   NAME  |   DEPTH   |   DIRT\n"
     process_high_scores()

@@ -58,6 +58,7 @@ func _physics_process(delta: float) -> void:
     if global_position.y >= stop_pos and embed == -1:
         embed = Utils.rand_int_incl(EMBED_MIN, EMBED_MAX)
     elif embed == 0:
+        Events.emit_signal("add_screenshake", 0.055, 0.2)
         SoundFx.play("rockdrop_landing", 1, -15)
         done_falling = true
         hitboxCollider.disabled = true

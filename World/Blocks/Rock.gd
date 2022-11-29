@@ -30,11 +30,10 @@ func _ready() -> void:
     visible = false
 
 
-func dig() -> void:
-    # warning-ignore:return_value_discarded
+func dig(throw: bool = false) -> void:
     if on_screen:
         var effect: DestroyEffect = Utils.instance_scene_on_main(DestroyEffectScene, global_position)
-        effect.create_effect(RockPhysicsParticleScene, RockPhysicsParticleSmallScene)
+        effect.create_effect(RockPhysicsParticleScene, RockPhysicsParticleSmallScene, throw)
     SoundFx.play("digging", 1, -15)
     queue_free()
 
@@ -63,6 +62,7 @@ func _physics_process(delta: float) -> void:
         else:
             sprite.position = Vector2(sprite.position.x + shake_x, sprite.position.y + shake_y)
     elif falling and floor_collision:
+        Events.emit_signal("add_screenshake", 0.055, 0.2)
         SoundFx.play("rockdrop_landing", 0.75, -15)
         hitboxCollider.disabled = true
         motion = Vector2.ZERO

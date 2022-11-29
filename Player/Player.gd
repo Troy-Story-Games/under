@@ -112,7 +112,7 @@ func _physics_process(delta):
                 dig_block = null
                 state = MOVE
             else:
-                dig_block.dig()
+                dig_block.dig(true)
 
             if Input.is_action_just_released("ui_down") or Input.is_action_just_released("ui_left") or Input.is_action_just_released("ui_right"):
                 state = MOVE
@@ -255,7 +255,7 @@ func double_press_dig():
     elif left_wall:
         collider = left_wall.collider
 
-    if collider == null or not collider is DirtBlock:
+    if collider == null or (not collider is DirtBlock and not collider is ChestBlock):
         return
 
     dig_block = collider
@@ -371,19 +371,19 @@ func assign_camera_follow(remote_path: String):
 func dig_check():
     if (Input.is_action_pressed("ui_right") or Input.is_action_pressed("ui_left")) and wall_collision and on_floor():
         var wall_collider: Node = wall_collision.collider
-        if wall_collider is DirtBlock:
+        if wall_collider is DirtBlock or wall_collider is ChestBlock:
             dig_block = wall_collider
             state = DIG
 
     if Input.is_action_pressed("ui_down") and floor_collision:
         var floor_collider: Node = floor_collision.collider
-        if floor_collider is DirtBlock:
+        if floor_collider is DirtBlock or floor_collider is ChestBlock:
             dig_block = floor_collider
             state = DIG
 
     if (Input.is_action_just_pressed("jump") or Input.is_action_just_pressed("ui_up")) and ceiling_collision and ceiling_close():
         var ceiling_collider: Node = ceiling_collision.collider
-        if ceiling_collider is DirtBlock:
+        if ceiling_collider is DirtBlock or ceiling_collider is ChestBlock:
             dig_block = ceiling_collider
             state = DIG
 
@@ -403,6 +403,8 @@ func _on_Hurtbox_take_damage(damage : int, _area : Area2D):
 
 func _on_ItemCollector_body_entered(body):
     if body is CollectibleItem:
+        if body.VALUE >= 10:
+            SoundFx.play("pickup_emerald", 1, -15)
         playerStats.dirt += body.VALUE
     body.queue_free()
 
@@ -416,6 +418,9 @@ func _on_GroundPoundDigger_body_entered(body: Node) -> void:
     if embed != 0:
         if body.has_method("dig"):
             body.call_deferred("dig")
+            # Can't check is Rock b/c Godot is bad (or maybe I am)
+            if body.is_in_group("Rock") or body is ChestBlock:
+                embed = 0
         elif body.has_method("explode"):
             body.call_deferred("explode")
         elif not body == self:
