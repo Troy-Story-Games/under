@@ -231,15 +231,15 @@ func update_animations(input_vector):
 
 
 func on_floor():
-    return floor_collision != null
+    return floor_collision != null and is_instance_valid(floor_collision) and not floor_collision.is_queued_for_deletion()
 
 
 func on_wall():
-    return wall_collision != null
+    return wall_collision != null and is_instance_valid(wall_collision) and not wall_collision.is_queued_for_deletion()
 
 
 func ceiling_close():
-    return ceiling_collision != null
+    return ceiling_collision != null and is_instance_valid(ceiling_collision) and not ceiling_collision.is_queued_for_deletion()
 
 
 func double_press_dig():

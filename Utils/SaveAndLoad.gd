@@ -6,9 +6,9 @@ extends Node
 const SAVE_FILE := "user://under_save_data.json"
 
 var custom_data := {
-    # TODO: Store custom data here. This will be saved to the file first.
     "version": "0.0.1",
-    "high_scores": []
+    "high_scores": [],
+    "game_completed": false
 }
 
 

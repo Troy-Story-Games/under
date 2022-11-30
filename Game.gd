@@ -29,24 +29,6 @@ enum CaveType {
     H_TUNNEL
 }
 
-# Blocks that spawn as part of level generation
-enum GameHazard {
-    ROCK,
-    BOMB
-}
-
-# Blocks that spawn as part of level generation (but are good)
-enum GameGift {
-    CHEST
-}
-
-# Events that happen outside of level generation
-enum GameEvent {
-    ROCK_DROP,
-    FLOOD,
-    TRIP_WIRE
-}
-
 # Minimum number of pixels the player can be away from the last generated row
 # before we generate a new row.
 export(int) var REGENERATE_BLOCK_THRESHOLD = 80
@@ -65,31 +47,29 @@ export(int) var CAVE_DEPTH = 24
 export(float) var V_TUNNEL_DOWN_FACTOR = 0.65
 export(float) var H_TUNNEL_DOWN_FACTOR = 0.45
 
-# Chance that a hazard or gift is generated.
-export(float) var HAZARD_OR_GIFT_CHANCE = 0.05
+# Chances for different game events/hazards/gifts/etc.
+export(float) var ROCK_CHANCE = 0.03
+export(float) var MIN_BOMB_CHANCE = 0.03
+export(float) var MAX_BOMB_CHANCE = 0.06
+export(float) var CHEST_CHANCE = 0.005
+export(int) var EVENT_COOLDOWN_MAX = 20
+export(int) var EVENT_COOLDOWN_MIN = 2
+export(int) var MAX_DIFFICULTY_DEPTH = 1700
 
-# Chance that a gift is generated when HAZARD_OR_GIFT_CHANCE happens
-# Translated: 1% of 5% of the time...a gift will be generated
-export(float) var GIFT_CHANCE = 0.01
-
-# The depth (in blocks) at which GameHazards will start
-export(int) var HAZARD_OR_GIFT_START_DEPTH = 10
+# The depth (in blocks) at which more than just dirt spawns and then at
+# which point bombs will spawn
+export(int) var ONLY_DIRT_UNTIL = 10
+export(int) var ONLY_ROCKS_UNTIL = 100
 
 # The depth (in blocks) at which GameEvents will start
-export(int) var EVENT_START_DEPTH = 24
-
-# Max time to wait b/w game events
-export(int) var EVENT_COOLDOWN_MAX = 20
-
-# Min time to wait b/w game events
-export(int) var EVENT_COOLDOWN_MIN = 1
-
-# The depth (in blocks) at which the event cooldown should be at its minimum value
-export(int) var EVENT_MAX_DIFFICULTY_DEPTH = 500
+export(int) var EVENT_START_DEPTH = 200
 
 # The depth goal posts (in meters) are this far apart
 export(int) var DEPTH_GOAL_INTERVAL = 500
 export(int) var DEPTH_GOAL_FLAG_X_OFFSET = 50
+
+# Depth the game ends when not in endless mode
+export(int) var ENDGAME_DEPTH = 2000
 
 onready var camera = $Camera2D
 onready var leftWall = $LeftWall
@@ -116,6 +96,7 @@ var cave_carve_state = CaveCarving.NOT_CARVING
 var cave_type_data = {}
 var left_x_pos: float = 0.0
 var target_depth_goal: int = 0
+var endless_mode: bool = false
 
 
 func _ready():
@@ -129,6 +110,9 @@ func _ready():
     playerStats.connect("lives_changed", self, "_on_PlayerStats_lives_changed")
     # warning-ignore:return_value_discarded
     playerStats.connect("player_depth_changed", self, "_on_PlayerStats_player_depth_changed")
+
+    if SaveAndLoad.custom_data.game_completed:
+        endless_mode = true
 
     gameUI.set_dirt(0)
     gameUI.set_lives(playerStats.lives)
@@ -159,6 +143,10 @@ func pos_to_block_depth(pos: Vector2) -> float:
     return pos_to_pixel_depth(pos) / float(Utils.BLOCK_SIZE)
 
 
+func get_depth_difficulty_factor(depth_in_blocks: float) -> float:
+    return depth_in_blocks / float(MAX_DIFFICULTY_DEPTH)
+
+
 func meters_to_pixels(meters: int) -> int:
     # Convert a number of meters in depth to a y position.
     return int(zero_depth) + int((meters / float(Utils.BLOCK_SIZE_IN_METERS)) * Utils.BLOCK_SIZE)
@@ -179,20 +167,23 @@ func _process(_delta: float) -> void:
     current_depth_blocks = pos_to_block_depth(player.global_position)
     current_depth_meters = current_depth_blocks * Utils.BLOCK_SIZE_IN_METERS
     playerStats.set_depth(int(ceil(current_depth_meters)))
+
     if current_depth_blocks >= EVENT_START_DEPTH and eventCooldownTimer.time_left == 0:
         eventCooldownTimer.start(event_cooldown_time)
 
-    if current_depth_blocks <= EVENT_MAX_DIFFICULTY_DEPTH:
-        var depth_difficulty_factor: float = current_depth_blocks / float(EVENT_MAX_DIFFICULTY_DEPTH)
-        var new_cooldown_time = (EVENT_COOLDOWN_MAX - EVENT_COOLDOWN_MIN) * (1 - depth_difficulty_factor)
+    if current_depth_blocks <= MAX_DIFFICULTY_DEPTH:
+        var new_cooldown_time = (EVENT_COOLDOWN_MAX - EVENT_COOLDOWN_MIN) * (1 - get_depth_difficulty_factor(current_depth_blocks))
         event_cooldown_time = clamp(new_cooldown_time, EVENT_COOLDOWN_MIN, EVENT_COOLDOWN_MAX)
+    else:
+        event_cooldown_time = EVENT_COOLDOWN_MIN
 
     if current_depth_meters >= target_depth_goal:
         depth_goal_reached()
+    if current_depth_meters >= ENDGAME_DEPTH and not endless_mode:
+        print("YOU WIN!")
 
 
 func depth_goal_reached():
-    print("DEPTH GOAL REACHED!")
     target_depth_goal += DEPTH_GOAL_INTERVAL
     depthGoalFlag.global_position = Vector2(DEPTH_GOAL_FLAG_X_OFFSET, meters_to_pixels(target_depth_goal))
     # TODO: play a success sound
@@ -348,35 +339,7 @@ func generate_more_blocks(slow: bool = false):
     cave_carve_state = CaveCarving.NOT_CARVING
 
 
-func spawn_hazard_or_gift(pos: Vector2):
-    var spawn_gift: bool = false
-    if randf() < GIFT_CHANCE:
-        spawn_gift = true
-
-    var hazard_types = GameHazard.values()
-    hazard_types.shuffle()
-    var hazard = hazard_types[0]
-
-    var gift_types = GameGift.values()
-    gift_types.shuffle()
-    var gift = gift_types[0]
-
-    if not spawn_gift:
-        match hazard:
-            GameHazard.ROCK:
-                # warning-ignore:return_value_discarded
-                Utils.instance_scene_on_main(RockScene, pos)
-            GameHazard.BOMB:
-                # warning-ignore:return_value_discarded
-                Utils.instance_scene_on_main(BombBlockScene, pos)
-    else:
-        match gift:
-            GameGift.CHEST:
-                # warning-ignore:return_value_discarded
-                Utils.instance_scene_on_main(ChestBlockScene, pos)
-
-
-func spawn_event():
+func spawn_rock_drop():
     # If the player dies at or around the same moment we try to spawn
     # an event, there's a chance we try to access an attribute from the player
     # but it would be an invalid instance until the player respawns. So we spin
@@ -384,43 +347,60 @@ func spawn_event():
     while player == null or not is_instance_valid(player):
         yield(get_tree(), "idle_frame")
 
-    var event_types = GameEvent.values()
-    event_types.shuffle()
-    var event = event_types[0]
-
-    # TODO: Remove this line - it forces all events to be rock drop
-    event = GameEvent.ROCK_DROP
-    # TODO: Remove the above line - it forces all events to be rock drop
-
     SoundFx.play("event_warning", 1, -15)
 
-    match event:
-        GameEvent.FLOOD:
-            print("FLOOD")
-        GameEvent.ROCK_DROP:
-            print("ROCK DROP")
-            var col = Utils.rand_int_incl(0, Utils.NUM_COLS - 1)
-            var col_x = left_x_pos + (col * Utils.BLOCK_SIZE) + Utils.HALF_BLOCK_SIZE
-            var y_pos = player.global_position.y - (Utils.BLOCK_SIZE * CAVE_DEPTH)
+    var col = Utils.rand_int_incl(0, Utils.NUM_COLS - 1)
+    var col_x = left_x_pos + (col * Utils.BLOCK_SIZE) + Utils.HALF_BLOCK_SIZE
+    var y_pos = player.global_position.y - (Utils.BLOCK_SIZE * CAVE_DEPTH)
 
-            # warning-ignore:return_value_discarded
-            Utils.instance_scene_on_main(RockDropScene, Vector2(col_x, y_pos))
+    # warning-ignore:return_value_discarded
+    Utils.instance_scene_on_main(RockDropScene, Vector2(col_x, y_pos))
 
-            var warning_arrow = WarningArrowScene.instance()
-            canvasLayer.add_child(warning_arrow)
-            warning_arrow.global_position.y = Utils.BLOCK_SIZE
-            warning_arrow.global_position.x = col_x
-        GameEvent.TRIP_WIRE:
-            print("TRIP WIRE")
+    var warning_arrow = WarningArrowScene.instance()
+    canvasLayer.add_child(warning_arrow)
+    warning_arrow.global_position.y = Utils.BLOCK_SIZE
+    warning_arrow.global_position.x = col_x
 
 
 func place_world_block(pos: Vector2) -> void:
-    if randf() < HAZARD_OR_GIFT_CHANCE and pos_to_block_depth(pos) > HAZARD_OR_GIFT_START_DEPTH:
-        spawn_hazard_or_gift(pos)
+    var block_depth = pos_to_block_depth(pos)
+    if block_depth < ONLY_DIRT_UNTIL:
+        # warning-ignore:return_value_discarded
+        Utils.instance_scene_on_main(BlockScene, pos)
+        return
+
+    var rock_percent = ROCK_CHANCE * 100.0
+    var chest_percent = CHEST_CHANCE * 100.0
+    var bomb_percent = 0
+    var current_bomb_chance = 0
+
+    if block_depth >= ONLY_ROCKS_UNTIL:
+        if block_depth <= MAX_DIFFICULTY_DEPTH:
+            var new_bomb_chance = (MAX_BOMB_CHANCE - MIN_BOMB_CHANCE) * (1 - get_depth_difficulty_factor(block_depth))
+            current_bomb_chance = clamp(new_bomb_chance, MIN_BOMB_CHANCE, MAX_BOMB_CHANCE)
+        else:
+            current_bomb_chance = MAX_BOMB_CHANCE
+        bomb_percent = current_bomb_chance * 100.0
+
+    # Weighted randomization (I think)
+    var rock_range = Vector2(0.0, rock_percent)
+    var chest_range = Vector2(rock_percent, rock_percent + chest_percent)
+    var bomb_range = Vector2(rock_percent + chest_percent, rock_percent + chest_percent + bomb_percent)
+    var selection = randf() * 100.0
+
+    if selection >= rock_range.x and selection < rock_range.y:
+        # warning-ignore:return_value_discarded
+        Utils.instance_scene_on_main(RockScene, pos)
+    elif selection >= chest_range.x and selection < chest_range.y:
+        # warning-ignore:return_value_discarded
+        Utils.instance_scene_on_main(ChestBlockScene, pos)
+    elif selection >= bomb_range.x and selection < bomb_range.y:
+         # warning-ignore:return_value_discarded
+        Utils.instance_scene_on_main(BombBlockScene, pos)
     else:
         # warning-ignore:return_value_discarded
         Utils.instance_scene_on_main(BlockScene, pos)
 
 
 func _on_EventCooldownTimer_timeout() -> void:
-    spawn_event()
+    spawn_rock_drop()

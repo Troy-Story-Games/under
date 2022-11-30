@@ -1,11 +1,13 @@
 extends RigidBody2D
 class_name PhysicsParticle
 
+export(float) var PICKUP_TIME = 2.0
+
 onready var timer = $Timer
 
 
 func _ready() -> void:
-    timer.start(rand_range(2,4))
+    timer.start(PICKUP_TIME)
 
 
 func _on_Timer_timeout() -> void:

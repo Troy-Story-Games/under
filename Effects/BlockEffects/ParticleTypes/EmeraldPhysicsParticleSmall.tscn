@@ -8,6 +8,7 @@ radius = 1.5
 
 [node name="EmeraldPhysicsParticleSmall" instance=ExtResource( 1 )]
 script = ExtResource( 2 )
+PICKUP_TIME = 0.75
 
 [node name="Sprite" parent="." index="0"]
 frame = 5
