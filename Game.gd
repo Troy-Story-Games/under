@@ -14,12 +14,20 @@ const WarningArrowScene = preload("res://Effects/WarningArrow.tscn")
 const SideWallSpriteScene = preload("res://World/SideWallSprite.tscn")
 const ChestBlockScene = preload("res://World/Blocks/ChestBlock.tscn")
 
+# Endless or levels for game mode. Endless unlocked after first completion
+enum GameMode {
+    LEVELS,
+    ENDLESS
+}
+
+# Cave generation mode
 enum CaveCarving {
     NOT_CARVING,
     NEW_CAVE,
     CARVING
 }
 
+# Type of caves that can be generated
 enum CaveType {
     H_LINE,
     V_LINE,
@@ -42,9 +50,7 @@ enum GameGift {
 
 # Events that happen outside of level generation
 enum GameEvent {
-    ROCK_DROP,
-    FLOOD,
-    TRIP_WIRE
+    ROCK_DROP
 }
 
 # Minimum number of pixels the player can be away from the last generated row
@@ -69,14 +75,8 @@ export(float) var H_TUNNEL_DOWN_FACTOR = 0.45
 export(float) var HAZARD_OR_GIFT_CHANCE = 0.05
 
 # Chance that a gift is generated when HAZARD_OR_GIFT_CHANCE happens
-# Translated: 1% of 5% of the time...a gift will be generated
-export(float) var GIFT_CHANCE = 0.01
-
-# The depth (in blocks) at which GameHazards will start
-export(int) var HAZARD_OR_GIFT_START_DEPTH = 10
-
-# The depth (in blocks) at which GameEvents will start
-export(int) var EVENT_START_DEPTH = 24
+# Translated: 5% of 5% of the time...a gift will be generated
+export(float) var GIFT_CHANCE = 0.05
 
 # Max time to wait b/w game events
 export(int) var EVENT_COOLDOWN_MAX = 20
@@ -84,12 +84,15 @@ export(int) var EVENT_COOLDOWN_MAX = 20
 # Min time to wait b/w game events
 export(int) var EVENT_COOLDOWN_MIN = 1
 
+# The depth (in blocks) at which GameEvents will start
+export(int) var ENDLESS_EVENT_START_DEPTH = 24
+
 # The depth (in blocks) at which the event cooldown should be at its minimum value
 export(int) var EVENT_MAX_DIFFICULTY_DEPTH = 500
 
-# The depth goal posts (in meters) are this far apart
-export(int) var DEPTH_GOAL_INTERVAL = 500
+# Offset on the screen for the goal flag (in pixels)
 export(int) var DEPTH_GOAL_FLAG_X_OFFSET = 50
+export(int) var ENDLESS_DEPTH_GOAL_INTERVAL = 1000
 
 onready var camera = $Camera2D
 onready var leftWall = $LeftWall
@@ -116,6 +119,52 @@ var cave_carve_state = CaveCarving.NOT_CARVING
 var cave_type_data = {}
 var left_x_pos: float = 0.0
 var target_depth_goal: int = 0
+var current_level = 0
+var mode = GameMode.LEVELS
+
+# Game levels (depth in meters)
+#   level 0: nothing, just dirt
+#   level 1: 10 meters, rocks only
+#   level 2: 200 meters, rocks and bombs
+#   level 3: 500 meters, rocks, bombs, and falling rocks
+var levels = [
+    {
+        "start_depth": 0,
+        "hazards": [],
+        "events": [],
+        "rock_chance": Vector2.ZERO,
+        "bomb_chance": Vector2.ZERO,
+        "chest_chance": Vector2.ZERO,
+        "event_cooldown": Vector2.ZERO
+    },
+    {
+        "start_depth": 10,
+        "hazards": [GameHazard.ROCK],
+        "events": [],
+        "rock_chance": Vector2(0.05, 0.06),
+        "bomb_chance": Vector2.ZERO,
+        "chest_chance": Vector2(0.05, 0.05),
+        "event_cooldown": Vector2.ZERO
+    },
+    {
+        "start_depth": 200,
+        "hazards": [GameHazard.ROCK, GameHazard.BOMB],
+        "events": [],
+        "rock_chance": Vector2(0.05, 0.06),
+        "bomb_chance": Vector2(0.05, 0.08),
+        "chest_chance": Vector2(0.05, 0.05),
+        "event_cooldown": Vector2.ZERO
+    },
+    {
+        "start_depth": 500,
+        "hazards": [GameHazard.ROCK, GameHazard.BOMB],
+        "events": [GameEvent.ROCK_DROP],
+        "rock_chance": Vector2(0.05, 0.06),
+        "bomb_chance": Vector2(0.05, 0.08),
+        "chest_chance": Vector2(0.05, 0.05),
+        "event_cooldown": Vector2(20, 2)
+    }
+]
 
 
 func _ready():
@@ -129,6 +178,15 @@ func _ready():
     playerStats.connect("lives_changed", self, "_on_PlayerStats_lives_changed")
     # warning-ignore:return_value_discarded
     playerStats.connect("player_depth_changed", self, "_on_PlayerStats_player_depth_changed")
+
+    # Set game mode and depth goal flag
+    if SaveAndLoad.custom_data.game_completed:
+        mode = GameMode.ENDLESS
+        target_depth_goal = ENDLESS_DEPTH_GOAL_INTERVAL
+    else:
+        target_depth_goal = levels[1].start_depth
+
+    depthGoalFlag.global_position = Vector2(DEPTH_GOAL_FLAG_X_OFFSET, meters_to_pixels(target_depth_goal))
 
     gameUI.set_dirt(0)
     gameUI.set_lives(playerStats.lives)
@@ -144,8 +202,6 @@ func _ready():
 
     cave_depth = zero_depth + (CAVE_DEPTH * Utils.BLOCK_SIZE)
     event_cooldown_time = EVENT_COOLDOWN_MAX
-    target_depth_goal = DEPTH_GOAL_INTERVAL
-    depthGoalFlag.global_position = Vector2(DEPTH_GOAL_FLAG_X_OFFSET, meters_to_pixels(target_depth_goal))
     generate_more_blocks()
 
     respawn_player()
@@ -179,24 +235,41 @@ func _process(_delta: float) -> void:
     current_depth_blocks = pos_to_block_depth(player.global_position)
     current_depth_meters = current_depth_blocks * Utils.BLOCK_SIZE_IN_METERS
     playerStats.set_depth(int(ceil(current_depth_meters)))
-    if current_depth_blocks >= EVENT_START_DEPTH and eventCooldownTimer.time_left == 0:
-        eventCooldownTimer.start(event_cooldown_time)
 
-    if current_depth_blocks <= EVENT_MAX_DIFFICULTY_DEPTH:
-        var depth_difficulty_factor: float = current_depth_blocks / float(EVENT_MAX_DIFFICULTY_DEPTH)
-        var new_cooldown_time = (EVENT_COOLDOWN_MAX - EVENT_COOLDOWN_MIN) * (1 - depth_difficulty_factor)
-        event_cooldown_time = clamp(new_cooldown_time, EVENT_COOLDOWN_MIN, EVENT_COOLDOWN_MAX)
+    match mode:
+        GameMode.ENDLESS:
+            if current_depth_blocks >= ENDLESS_EVENT_START_DEPTH and eventCooldownTimer.time_left == 0:
+                eventCooldownTimer.start(event_cooldown_time)
+
+            if current_depth_blocks <= EVENT_MAX_DIFFICULTY_DEPTH:
+                var depth_difficulty_factor: float = current_depth_blocks / float(EVENT_MAX_DIFFICULTY_DEPTH)
+                var new_cooldown_time = (EVENT_COOLDOWN_MAX - EVENT_COOLDOWN_MIN) * (1 - depth_difficulty_factor)
+                event_cooldown_time = clamp(new_cooldown_time, EVENT_COOLDOWN_MIN, EVENT_COOLDOWN_MAX)
+        GameMode.LEVELS:
+            pass
+
 
     if current_depth_meters >= target_depth_goal:
         depth_goal_reached()
 
 
 func depth_goal_reached():
-    print("DEPTH GOAL REACHED!")
-    target_depth_goal += DEPTH_GOAL_INTERVAL
+    match mode:
+        GameMode.ENDLESS:
+            target_depth_goal += ENDLESS_DEPTH_GOAL_INTERVAL
+        GameMode.LEVELS:
+            current_level += 1
+            if current_level >= (len(levels) - 1):
+                # Last level
+                depthGoalFlag.visible = false
+            else:
+                target_depth_goal = levels[current_level + 1].start_depth
+
+            if current_level == len(levels):
+                print("GAME COMPLETE")
+                SaveAndLoad.custom_data.game_completed = true
+
     depthGoalFlag.global_position = Vector2(DEPTH_GOAL_FLAG_X_OFFSET, meters_to_pixels(target_depth_goal))
-    # TODO: play a success sound
-    # TODO: Spawn 100 dirt
 
 
 func _on_PlayerStats_dirt_changed(value: int):
