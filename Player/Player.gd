@@ -1,6 +1,9 @@
 extends KinematicBody2D
 class_name Player
 
+const JumpEffectScene = preload("res://Effects/JumpEffect.tscn")
+const WallJumpEffectScene = preload("res://Effects/WallJumpEffect.tscn")
+
 export(int) var ACCELERATION = 150
 export(int) var MAX_SPEED = 32
 export(float) var FRICTION = 0.65
@@ -119,6 +122,7 @@ func _physics_process(delta):
 
         GROUND_POUND:
             if embed == -1 and ground_pound_start_pos == 0:
+                animationPlayer.play("GroundPoundStart")
                 groundPoundDiggerCollider.disabled = false
                 ground_pound_start_pos = global_position.y
 
@@ -183,10 +187,18 @@ func jump_check():
     if not on_floor() and wall_axis != WallAxis.NONE and jump_just_pressed:
         # Wall jump
         motion.x = wall_axis * MAX_SPEED
+
+        var wall_jump_effect = Utils.instance_scene_on_main(WallJumpEffectScene, global_position)
+        wall_jump_effect.scale.x *= wall_axis
+
         jump(JUMP_FORCE/1.25)
         just_jumped = true
     elif (on_floor() or coyoteJumpTimer.time_left > 0) and not ceiling_close() and jump_just_pressed:
         # Regular jump
+
+        # warning-ignore:return_value_discarded
+        Utils.instance_scene_on_main(JumpEffectScene, global_position)
+
         jump(JUMP_FORCE)
         just_jumped = true
     else:
@@ -195,6 +207,10 @@ func jump_check():
 
         if jump_just_pressed and double_jump == true:
             # Handle double jump
+
+            # warning-ignore:return_value_discarded
+            Utils.instance_scene_on_main(JumpEffectScene, global_position)
+
             jump(JUMP_FORCE * 0.75)
             double_jump = false
 
@@ -227,7 +243,7 @@ func update_animations(input_vector):
     # Override run/idle if we're in the air
     if not on_floor():
         footstepPlayer.stop()
-        # TODO: Play jump animation
+        animationPlayer.play("Jump")
 
 
 func on_floor():
@@ -425,3 +441,8 @@ func _on_GroundPoundDigger_body_entered(body: Node) -> void:
             body.call_deferred("explode")
         elif not body == self:
             body.queue_free()
+
+
+func _on_AnimationPlayer_animation_finished(anim_name: String) -> void:
+    if anim_name == "GroundPoundStart":
+        animationPlayer.play("GroundPound")
