@@ -1,12 +1,14 @@
 extends Control
 class_name HighScoreMenu
 
-var MAX_TO_DISPLAY = 15
+var MAX_TO_DISPLAY = 10
 
 var high_scores = []
 var high_score_text = ""
 onready var label = $"%TextEdit"
 onready var mainMenuButton = $"%MainMenuButton"
+onready var hSep = $"%HSeparator"
+onready var completionTimeLabel = $"%CompletedGameTime"
 
 
 class CustomSorter:
@@ -17,6 +19,13 @@ class CustomSorter:
 
 
 func _ready():
+    hSep.visible = false
+    completionTimeLabel.visible = false
+    if SaveAndLoad.custom_data.game_completed:
+        hSep.visible = true
+        completionTimeLabel.visible = true
+        completionTimeLabel.text = "Main Game Completed!\nTime: " + str(SaveAndLoad.custom_data.completion_time / 60.0) + " mins"
+
     mainMenuButton.grab_focus()
     high_scores = SaveAndLoad.custom_data.high_scores
     high_score_text = "   NAME  |   DEPTH   |   DIRT\n"

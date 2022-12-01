@@ -42,6 +42,8 @@ func _physics_process(delta: float) -> void:
     floor_collision = move_and_collide(Vector2.DOWN, true, true, true)
     if floor_collision:
         floor_collider = floor_collision.collider
+        if floor_collider is EndgameBlock:
+            dig()
         if floor_collider is Player:
             # warning-ignore:unsafe_property_access
             if floor_collider.hurtbox.invincible:

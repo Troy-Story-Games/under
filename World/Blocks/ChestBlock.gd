@@ -9,6 +9,8 @@ const RockPhysicsParticleSmallScene = preload("res://Effects/BlockEffects/Partic
 onready var timer = $Timer
 onready var animationPlayer = $BlinkAnimationPlayer
 
+var opened := false
+
 
 func spawn_emeralds(throw: bool = false):
     var effect: DestroyEffect = Utils.instance_scene_on_main(DestroyEffectScene, global_position)
@@ -21,9 +23,14 @@ func dig(throw: bool = false) -> void:
         spawn_emeralds()
         SoundFx.play("pickup_emerald", 1, -15)
         queue_free()
+        opened = true
         return
 
     if timer.time_left > 0:
+        opened = true
+        return
+
+    if opened:
         return
 
     # Switch to open and spawn emeralds

@@ -17,11 +17,13 @@ func instance_scene_on_main(packed_scene: PackedScene, position: Vector2 = Vecto
     return instance
 
 
-func instance_particle(packed_scene: PackedScene) -> RigidBody2D:
+func instance_particle(packed_scene: PackedScene) -> PhysicsParticle:
     if current_particles == MAX_PARTICLES:
         return null
 
-    var instance = packed_scene.instance()
+    var instance: PhysicsParticle = packed_scene.instance()
+
+    # warning-ignore:return_value_discarded
     instance.connect("tree_exited", self, "_on_Particle_tree_exited")
     current_particles += 1
     return instance
