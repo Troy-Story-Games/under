@@ -7,7 +7,7 @@ onready var button = $"%Button"
 
 func _ready():
     button.grab_focus()
-    timeLabel.text = "Time: " + str(SaveAndLoad.custom_data.completion_time / 60.0) + "mins"
+    timeLabel.text = "Time: " + SaveAndLoad.get_completion_time_str()
 
 
 func _on_Button_pressed() -> void:

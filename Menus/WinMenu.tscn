@@ -19,8 +19,9 @@ script = ExtResource( 2 )
 
 [node name="VBoxContainer" type="VBoxContainer" parent="."]
 margin_left = 31.0
+margin_top = 17.0
 margin_right = 129.0
-margin_bottom = 144.0
+margin_bottom = 126.0
 rect_min_size = Vector2( 64, 0 )
 
 [node name="Label" type="Label" parent="VBoxContainer"]
@@ -62,8 +63,8 @@ text = "main menu"
 [node name="Spacer" type="Control" parent="VBoxContainer"]
 margin_top = 59.0
 margin_right = 98.0
-margin_bottom = 144.0
-rect_min_size = Vector2( 0, 85 )
+margin_bottom = 109.0
+rect_min_size = Vector2( 0, 50 )
 
 [node name="Node2D" type="Node2D" parent="."]
 z_index = -1

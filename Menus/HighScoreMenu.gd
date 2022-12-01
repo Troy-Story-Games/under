@@ -24,7 +24,7 @@ func _ready():
     if SaveAndLoad.custom_data.game_completed:
         hSep.visible = true
         completionTimeLabel.visible = true
-        completionTimeLabel.text = "Main Game Completed!\nTime: " + str(SaveAndLoad.custom_data.completion_time / 60.0) + " mins"
+        completionTimeLabel.text = "Main Game Completed!\nTime: " + SaveAndLoad.get_completion_time_str()
 
     mainMenuButton.grab_focus()
     high_scores = SaveAndLoad.custom_data.high_scores

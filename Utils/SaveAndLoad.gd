@@ -17,6 +17,17 @@ func _ready():
     load_game()
 
 
+func get_completion_time_str() -> String:
+    var duration = custom_data.completion_time
+    var mins: int = int(floor(duration / 60.0))
+    var secs_fraction: float = float(duration / 60.0) - mins
+    var secs: int = 0
+    if secs_fraction > 0:
+        secs = int(floor(60 * secs_fraction))
+
+    return str(mins) + ":" + str(secs)
+
+
 func save_game():
     var save_game := File.new()
     # warning-ignore:return_value_discarded
