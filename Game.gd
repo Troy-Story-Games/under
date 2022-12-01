@@ -52,11 +52,11 @@ export(float) var H_TUNNEL_DOWN_FACTOR = 0.45
 # Chances for different game events/hazards/gifts/etc.
 export(float) var ROCK_CHANCE = 0.03
 export(float) var MIN_BOMB_CHANCE = 0.03
-export(float) var MAX_BOMB_CHANCE = 0.06
+export(float) var MAX_BOMB_CHANCE = 0.07
 export(float) var CHEST_CHANCE = 0.005
-export(int) var EVENT_COOLDOWN_MAX = 20
-export(int) var EVENT_COOLDOWN_MIN = 2
-export(int) var MAX_DIFFICULTY_DEPTH = 1700
+export(float) var EVENT_COOLDOWN_MAX = 10.0
+export(float) var EVENT_COOLDOWN_MIN = 1.5
+export(int) var MAX_DIFFICULTY_DEPTH = 1500
 
 # The depth (in blocks) at which more than just dirt spawns and then at
 # which point bombs will spawn
