@@ -1,0 +1,261 @@
+[gd_scene load_steps=15 format=2]
+
+[ext_resource path="res://Fonts/PublicPixel.ttf" type="DynamicFontData" id=1]
+[ext_resource path="res://Assets/kb_light_all.png" type="Texture" id=2]
+[ext_resource path="res://Fonts/KenneyMiniSquare.ttf" type="DynamicFontData" id=3]
+[ext_resource path="res://Menus/ControlsMenu.gd" type="Script" id=4]
+[ext_resource path="res://Menus/MenuTheme.tres" type="Theme" id=5]
+
+[sub_resource type="DynamicFont" id=6]
+size = 8
+font_data = ExtResource( 1 )
+
+[sub_resource type="Animation" id=1]
+resource_name = "Press"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 204, 206, 204, 206, 204 ]
+}
+
+[sub_resource type="Animation" id=2]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ 204 ]
+}
+
+[sub_resource type="Animation" id=3]
+resource_name = "GroundPountButtonPress"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 236, 238, 236, 238, 236 ]
+}
+
+[sub_resource type="Animation" id=4]
+resource_name = "Press"
+
+[sub_resource type="Animation" id=5]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ 236 ]
+}
+
+[sub_resource type="Animation" id=8]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0 ),
+"transitions": PoolRealArray( 1 ),
+"update": 0,
+"values": [ 252 ]
+}
+
+[sub_resource type="Animation" id=9]
+resource_name = "wallbreakpress"
+loop = true
+tracks/0/type = "value"
+tracks/0/path = NodePath(".:frame")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/keys = {
+"times": PoolRealArray( 0, 0.1, 0.2, 0.3, 0.5 ),
+"transitions": PoolRealArray( 1, 1, 1, 1, 1 ),
+"update": 1,
+"values": [ 252, 254, 252, 254, 252 ]
+}
+
+[sub_resource type="DynamicFont" id=7]
+size = 7
+font_data = ExtResource( 3 )
+
+[node name="ControlsMenu" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 4 )
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+margin_right = 160.0
+margin_bottom = 144.0
+
+[node name="upKey" type="Sprite" parent="."]
+position = Vector2( 73, 19 )
+texture = ExtResource( 2 )
+hframes = 16
+vframes = 26
+frame = 204
+
+[node name="JumpKey" type="Sprite" parent="."]
+position = Vector2( 17, 73 )
+texture = ExtResource( 2 )
+hframes = 16
+vframes = 26
+frame = 204
+
+[node name="JumpLabel" type="Label" parent="JumpKey"]
+margin_left = -4.0
+margin_top = -8.0
+margin_right = 52.0
+margin_bottom = 6.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+custom_fonts/font = SubResource( 6 )
+text = "Jump"
+align = 1
+valign = 1
+
+[node name="DoubleJumpKey" type="Sprite" parent="."]
+position = Vector2( 17, 93 )
+texture = ExtResource( 2 )
+hframes = 16
+vframes = 26
+frame = 204
+
+[node name="Press" type="AnimationPlayer" parent="DoubleJumpKey"]
+autoplay = "Press"
+anims/Press = SubResource( 1 )
+anims/RESET = SubResource( 2 )
+
+[node name="DoubleJumpLabel" type="Label" parent="DoubleJumpKey"]
+margin_left = 9.0
+margin_top = -9.0
+margin_right = 65.0
+margin_bottom = 10.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+custom_fonts/font = SubResource( 6 )
+text = "Double 
+Jump"
+
+[node name="GroundPoundKey" type="Sprite" parent="."]
+position = Vector2( 17, 118 )
+texture = ExtResource( 2 )
+hframes = 16
+vframes = 26
+frame = 236
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="GroundPoundKey"]
+autoplay = "GroundPountButtonPress"
+anims/GroundPountButtonPress = SubResource( 3 )
+anims/Press = SubResource( 4 )
+anims/RESET = SubResource( 5 )
+
+[node name="GroundPoundLabel" type="Label" parent="GroundPoundKey"]
+margin_left = 9.0
+margin_top = -8.0
+margin_right = 65.0
+margin_bottom = 11.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+custom_fonts/font = SubResource( 6 )
+text = "Ground
+Pound"
+valign = 1
+
+[node name="DownKey" type="Sprite" parent="."]
+position = Vector2( 73, 31 )
+texture = ExtResource( 2 )
+hframes = 16
+vframes = 26
+frame = 236
+
+[node name="LeftArrowKey" type="Sprite" parent="."]
+position = Vector2( 63, 31 )
+texture = ExtResource( 2 )
+hframes = 16
+vframes = 26
+frame = 220
+
+[node name="RightArrowKey" type="Sprite" parent="."]
+position = Vector2( 83, 31 )
+texture = ExtResource( 2 )
+hframes = 16
+vframes = 26
+frame = 252
+
+[node name="WallBreakKey" type="Sprite" parent="."]
+position = Vector2( 126, 94 )
+texture = ExtResource( 2 )
+hframes = 16
+vframes = 26
+frame = 252
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="WallBreakKey"]
+autoplay = "wallbreakpress"
+anims/RESET = SubResource( 8 )
+anims/wallbreakpress = SubResource( 9 )
+
+[node name="Label" type="Label" parent="WallBreakKey"]
+anchor_bottom = 0.149
+margin_left = -21.0
+margin_top = 6.0
+margin_right = 22.0
+margin_bottom = 39.0
+custom_fonts/font = SubResource( 7 )
+text = "To break
+during
+ wall slide"
+align = 1
+
+[node name="MovementLabel" type="Label" parent="."]
+margin_left = 43.0
+margin_top = 37.0
+margin_right = 99.0
+margin_bottom = 45.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+custom_fonts/font = SubResource( 6 )
+text = "To move"
+align = 1
+valign = 1
+
+[node name="Button" type="Button" parent="."]
+margin_left = 103.0
+margin_top = 2.0
+margin_right = 157.15
+margin_bottom = 22.6232
+theme = ExtResource( 5 )
+text = "->Back"
+
+[connection signal="pressed" from="Button" to="." method="_on_Button_pressed"]
