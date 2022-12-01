@@ -41,3 +41,8 @@ func _on_LittleGuyStartTimer_timeout():
 func _on_ScoreBoard_pressed() -> void:
     # warning-ignore:return_value_discarded
     get_tree().change_scene("res://Menus/HighScoreMenu.tscn")
+
+
+func _on_Controls_pressed() -> void:
+    # warning-ignore:return_value_discarded
+    get_tree().change_scene("res://Menus/ControlsMenu.tscn")
