@@ -27,11 +27,6 @@ func load_sound_fx():
             var fx_name: String = split[0]
             var ext: String = split[1]
             var full_path = sounds_path + fx_name + "." + ext
-
-            print("Found Sound effect: ", check)
-            print("Access by name: ", fx_name)
-            print("Full path: ", full_path)
-
             sounds[fx_name] = load(full_path)
         check = dir.get_next()
 

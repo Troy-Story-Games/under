@@ -13,6 +13,8 @@ const RockDropScene = preload("res://World/Blocks/RockDrop.tscn")
 const WarningArrowScene = preload("res://Effects/WarningArrow.tscn")
 const SideWallSpriteScene = preload("res://World/SideWallSprite.tscn")
 const ChestBlockScene = preload("res://World/Blocks/ChestBlock.tscn")
+const GoalBlockScene = preload("res://World/Blocks/GoalBlock.tscn")
+const EndgameBlockScene = preload("res://World/Blocks/EndgameBlock.tscn")
 
 enum CaveCarving {
     NOT_CARVING,
@@ -64,11 +66,10 @@ export(int) var ONLY_ROCKS_UNTIL = 100
 # The depth (in blocks) at which GameEvents will start
 export(int) var EVENT_START_DEPTH = 200
 
-# The depth goal posts (in meters) are this far apart
-export(int) var DEPTH_GOAL_INTERVAL = 500
-export(int) var DEPTH_GOAL_FLAG_X_OFFSET = 50
+# The depth goal posts (in blocks) are this far apart
+export(int) var DEPTH_GOAL_INTERVAL = 250
 
-# Depth the game ends when not in endless mode
+# Depth the game ends when not in endless mode in meters
 export(int) var ENDGAME_DEPTH = 2000
 
 onready var camera = $Camera2D
@@ -78,7 +79,6 @@ onready var newRowSpawn = $NewRowSpawn
 onready var gameUI = $Camera2D/CanvasLayer/GameUI
 onready var eventCooldownTimer = $EventCooldownTimer
 onready var canvasLayer = $Camera2D/CanvasLayer
-onready var depthGoalFlag = $DepthGoalFlagSprite
 
 var event_cooldown_time: float = 0.0
 var spawn_point: Vector2 = Vector2.ZERO
@@ -97,42 +97,55 @@ var cave_type_data = {}
 var left_x_pos: float = 0.0
 var target_depth_goal: int = 0
 var endless_mode: bool = false
+var generated_endgame_floor: bool = false
+var endgame_depth_blocks = 0
+var win_game = false
+var start_time = 0
+var time_now = 0
 
 
 func _ready():
-    # warning-ignore:return_value_discarded
+    # warning-ignore-all:return_value_discarded
     playerStats.connect("player_died", self, "_on_PlayerStats_player_died")
-    # warning-ignore:return_value_discarded
     playerStats.connect("game_over", self, "_on_PlayerStats_game_over")
-    # warning-ignore:return_value_discarded
     playerStats.connect("player_dirt_changed", self, "_on_PlayerStats_dirt_changed")
-    # warning-ignore:return_value_discarded
     playerStats.connect("lives_changed", self, "_on_PlayerStats_lives_changed")
-    # warning-ignore:return_value_discarded
     playerStats.connect("player_depth_changed", self, "_on_PlayerStats_player_depth_changed")
+    Events.connect("depth_goal_reached", self, "_on_Events_depth_goal_reached")
+    Events.connect("win_game", self, "_on_Events_win_game")
 
     if SaveAndLoad.custom_data.game_completed:
         endless_mode = true
 
     gameUI.set_dirt(0)
     gameUI.set_lives(playerStats.lives)
-    spawn_point = Vector2((Utils.NUM_COLS * Utils.BLOCK_SIZE) / 2.0, newRowSpawn.global_position.y - Utils.BLOCK_SIZE * 2)
+    spawn_point = Vector2((Utils.NUM_COLS * Utils.BLOCK_SIZE) / 1.25, newRowSpawn.global_position.y - Utils.BLOCK_SIZE * 8)
     left_x_pos = newRowSpawn.global_position.x
     zero_depth = newRowSpawn.global_position.y
 
     # Spawn initial left and right side walls
-    # warning-ignore:return_value_discarded
     Utils.instance_scene_on_main(SideWallSpriteScene, Vector2(LEFT_SIDE_WALL_X_POS, newRowSpawn.global_position.y))
-    # warning-ignore:return_value_discarded
     Utils.instance_scene_on_main(SideWallSpriteScene, Vector2(RIGHT_SIDE_WALL_X_POS, newRowSpawn.global_position.y))
 
     cave_depth = zero_depth + (CAVE_DEPTH * Utils.BLOCK_SIZE)
     event_cooldown_time = EVENT_COOLDOWN_MAX
     target_depth_goal = DEPTH_GOAL_INTERVAL
-    depthGoalFlag.global_position = Vector2(DEPTH_GOAL_FLAG_X_OFFSET, meters_to_pixels(target_depth_goal))
+    endgame_depth_blocks = meters_to_blocks(ENDGAME_DEPTH)
     generate_more_blocks()
 
     respawn_player()
+
+    start_time = OS.get_unix_time()
+
+
+func _on_Events_win_game():
+    time_now = OS.get_unix_time()
+    win_game = true
+    SaveAndLoad.custom_data.completion_time = time_now - start_time
+    SaveAndLoad.custom_data.game_completed = true
+    SaveAndLoad.save_game()
+    if player and is_instance_valid(player) and not player.is_queued_for_deletion():
+        player.unassign_camera_follow()
 
 
 func pos_to_pixel_depth(pos: Vector2) -> float:
@@ -150,6 +163,10 @@ func get_depth_difficulty_factor(depth_in_blocks: float) -> float:
 func meters_to_pixels(meters: int) -> int:
     # Convert a number of meters in depth to a y position.
     return int(zero_depth) + int((meters / float(Utils.BLOCK_SIZE_IN_METERS)) * Utils.BLOCK_SIZE)
+
+
+func meters_to_blocks(meters: int) -> int:
+    return int(meters / float(Utils.BLOCK_SIZE_IN_METERS))
 
 
 func _process(_delta: float) -> void:
@@ -177,17 +194,12 @@ func _process(_delta: float) -> void:
     else:
         event_cooldown_time = EVENT_COOLDOWN_MIN
 
-    if current_depth_meters >= target_depth_goal:
-        depth_goal_reached()
     if current_depth_meters >= ENDGAME_DEPTH and not endless_mode:
-        print("YOU WIN!")
+        player.start_invincibility(100)
 
 
-func depth_goal_reached():
+func _on_Events_depth_goal_reached():
     target_depth_goal += DEPTH_GOAL_INTERVAL
-    depthGoalFlag.global_position = Vector2(DEPTH_GOAL_FLAG_X_OFFSET, meters_to_pixels(target_depth_goal))
-    # TODO: play a success sound
-    # TODO: Spawn 100 dirt
 
 
 func _on_PlayerStats_dirt_changed(value: int):
@@ -235,10 +247,16 @@ func _on_PlayerStats_game_over():
     get_tree().change_scene("res://Menus/GameOverMenu.tscn")
 
 
+func _on_Player_player_exited_screen():
+    if win_game:
+        get_tree().change_scene("res://Menus/WinMenu.tscn")
+
+
 func respawn_player():
     playerStats.respawn()
     player = Utils.instance_scene_on_main(PlayerScene, spawn_point)
     player.assign_camera_follow(camera.get_path())
+    player.connect("player_exited_screen", self, "_on_Player_player_exited_screen")
     # warning-ignore:unsafe_property_access
     mainInstances.player = player
 
@@ -321,13 +339,33 @@ func generate_more_blocks(slow: bool = false):
     # warning-ignore:return_value_discarded
     Utils.instance_scene_on_main(SideWallSpriteScene, Vector2(RIGHT_SIDE_WALL_X_POS, newRowSpawn.global_position.y))
 
+    if generated_endgame_floor:
+        return
+
     cave_carve_state = CaveCarving.NEW_CAVE
 
     for row in range(ROW_BUFFER):
+        var y : float = pos.y + (row * Utils.BLOCK_SIZE) + Utils.HALF_BLOCK_SIZE
+        var block_depth = pos_to_block_depth(Vector2(0, y))
+
+        if row < 6 and block_depth >= endgame_depth_blocks and not endless_mode:
+            print("Making empty space for endgame")
+            generated_endgame_floor = true
+            continue  # Make a big empty space for the ends game area
+        if generated_endgame_floor:
+            Utils.instance_scene_on_main(EndgameBlockScene, Vector2(pos.x + Utils.HALF_BLOCK_SIZE, y))
+            return
+
         for col in range(Utils.NUM_COLS):
             var x : float = pos.x + (col * Utils.BLOCK_SIZE) + Utils.HALF_BLOCK_SIZE
-            var y : float = pos.y + (row * Utils.BLOCK_SIZE) + Utils.HALF_BLOCK_SIZE
             var new_pos: Vector2 = Vector2(x, y)
+
+            if col == 0 and block_depth >= target_depth_goal:
+                print("Generating goal blocks")
+                target_depth_goal += DEPTH_GOAL_INTERVAL
+                Utils.instance_scene_on_main(GoalBlockScene, new_pos)
+                break  # Goal blocks take a whole row
+
             if should_place_block(new_pos):
                 place_world_block(new_pos)
         if slow:
@@ -403,4 +441,5 @@ func place_world_block(pos: Vector2) -> void:
 
 
 func _on_EventCooldownTimer_timeout() -> void:
-    spawn_rock_drop()
+    if not win_game:
+        spawn_rock_drop()

@@ -8,7 +8,8 @@ const SAVE_FILE := "user://under_save_data.json"
 var custom_data := {
     "version": "0.0.1",
     "high_scores": [],
-    "game_completed": false
+    "game_completed": false,
+    "completion_time": 0.0
 }
 
 

@@ -29,7 +29,12 @@ func stop():
 
 
 func spawnDirt():
-    var dirt: RigidBody2D = Utils.instance_scene_on_main(DirtPhysicsParticleScene, dirtSpawnPoint.global_position)
+    var dirt: PhysicsParticle = Utils.instance_scene_on_main(DirtPhysicsParticleScene, dirtSpawnPoint.global_position)
+    # warning-ignore-all:unsafe_property_access
+    dirt.PICKUP_TIME = 10.0
+    dirt.SPAWN_COLLECTIBLE = false
+    dirt.start_timer()
+
     var direction = global_position.direction_to(fireDirection.global_position)
     var speed = rand_range(MIN_BULLET_SPEED, MAX_BULLET_SPEED)
     var velocity = direction * speed

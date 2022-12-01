@@ -1,0 +1,113 @@
+[gd_scene load_steps=7 format=2]
+
+[ext_resource path="res://Menus/MenuTheme.tres" type="Theme" id=1]
+[ext_resource path="res://Menus/WinMenu.gd" type="Script" id=2]
+[ext_resource path="res://World/SideWallSprite.tscn" type="PackedScene" id=3]
+[ext_resource path="res://Menus/GemSpawner.tscn" type="PackedScene" id=4]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 3, 188.5 )
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 87, 2 )
+
+[node name="WinMenu" type="CenterContainer"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+theme = ExtResource( 1 )
+script = ExtResource( 2 )
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+margin_left = 31.0
+margin_right = 129.0
+margin_bottom = 144.0
+rect_min_size = Vector2( 64, 0 )
+
+[node name="Label" type="Label" parent="VBoxContainer"]
+margin_right = 98.0
+margin_bottom = 4.0
+text = "YOU WIN!"
+align = 1
+
+[node name="TimeLabel" type="Label" parent="VBoxContainer"]
+unique_name_in_owner = true
+margin_top = 8.0
+margin_right = 98.0
+margin_bottom = 12.0
+text = "Time: xx mins"
+align = 1
+
+[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+margin_top = 16.0
+margin_right = 98.0
+margin_bottom = 20.0
+
+[node name="Label2" type="Label" parent="VBoxContainer"]
+margin_top = 24.0
+margin_right = 98.0
+margin_bottom = 35.0
+text = "Endless mode unlocked
+how deep can you go?"
+align = 1
+
+[node name="Button" type="Button" parent="VBoxContainer"]
+unique_name_in_owner = true
+margin_left = 22.0
+margin_top = 39.0
+margin_right = 74.1505
+margin_bottom = 55.6232
+size_flags_horizontal = 4
+text = "main menu"
+
+[node name="Spacer" type="Control" parent="VBoxContainer"]
+margin_top = 59.0
+margin_right = 98.0
+margin_bottom = 144.0
+rect_min_size = Vector2( 0, 85 )
+
+[node name="Node2D" type="Node2D" parent="."]
+z_index = -1
+
+[node name="LeftWall" type="KinematicBody2D" parent="Node2D"]
+position = Vector2( 6, 72 )
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Node2D/LeftWall"]
+position = Vector2( -3, -116.5 )
+shape = SubResource( 1 )
+
+[node name="RightWall" type="KinematicBody2D" parent="Node2D"]
+position = Vector2( 154, 72 )
+collision_mask = 0
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Node2D/RightWall"]
+position = Vector2( 3, -117 )
+shape = SubResource( 1 )
+
+[node name="SideWallSprite" parent="Node2D" instance=ExtResource( 3 )]
+position = Vector2( 2, 72 )
+
+[node name="SideWallSprite3" parent="Node2D" instance=ExtResource( 3 )]
+position = Vector2( 80, 140 )
+rotation = 1.5708
+scale = Vector2( 1, 1.02959 )
+
+[node name="SideWallSprite2" parent="Node2D" instance=ExtResource( 3 )]
+position = Vector2( 154, 72 )
+
+[node name="Floor" type="StaticBody2D" parent="Node2D"]
+position = Vector2( 79, 142 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Node2D/Floor"]
+shape = SubResource( 2 )
+
+[node name="GemSpawner" parent="Node2D" instance=ExtResource( 4 )]
+position = Vector2( 11, -4.76837e-07 )
+rotation = 2.87979
+
+[node name="GemSpawner2" parent="Node2D" instance=ExtResource( 4 )]
+position = Vector2( 149, 0 )
+rotation = -2.87979
+SPREAD = -65
+
+[connection signal="pressed" from="VBoxContainer/Button" to="." method="_on_Button_pressed"]
